@@ -69,6 +69,7 @@ public class ikaListener implements Listener{
 //			Location start = player.getLocation().clone().add(0,-0.1,0);
 //			start.add(vector);
 
+			//とりあえずここでgetCircleBlocks確認してるだけ。
 			Location start = player.getLocation().clone().add(0,-0.1,0);
 			for(Block block:BlockUtil.getCircleBlocks(start,3)){
 				Location set = block.getLocation();
