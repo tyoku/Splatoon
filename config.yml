@@ -1,0 +1,18 @@
+blockSet: false
+particle: true
+
+moveSpeed: 0.2
+ikaSpeed: 0.4
+downSpeed: 0.1
+downSteps: true
+
+inkGauge: 50
+inkHealSpeed: 1
+inkHeal: 1
+
+healDelay: 50
+healSpeed: 1
+heal: 0.5
+
+inkType: WOOL
+inkCanselBlocks: 44:0,1,7,44:3

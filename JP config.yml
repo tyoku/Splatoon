@@ -1,0 +1,57 @@
+#######################################
+####  SplatoonPlugin  Config.yml   ####
+####      設定の方法と説明         ####
+#######################################
+
+# blockSet: false //ワールドに直接書き込む
+# particle: true //パーティクルを使用する
+
+#######################################
+## イカ達の移動速度
+ 
+#moveSpeed: 0.25 //人間状態の移動速度
+#ikaSpeed: 0.5 //イカ状態の移動速度
+#downSpeed: 0.1 //敵インク上の移動速度
+#downSteps: true //自動的に段差を降りる
+
+#######################################
+## インクの設定
+
+#inkGauge: 50 //最大インクゲージ
+#inkHealSpeed: 1 //インクの回復速度
+#inkHeal: 1 //インクの回復量
+
+#######################################
+## イカの体力設定
+
+#healDelay: 50 //ダメージを喰らってから回復し始めるまでの待機時間
+#healSpeed: 1 //体力の回復速度
+#heal: 0.5 //体力の回復量
+
+#######################################
+## インクのブロック設定
+
+#inkType: WOOL //羊毛がいやならCLAYにしてください
+#inkCanselBlocks: 44:0,1,7,44:3 //インクを受け付けないブロック 指定方法: ID:SubID,ID:SubID
+
+#######################################
+# 以下 現在の設定
+
+blockSet: false
+particle: true
+
+moveSpeed: 0.2
+ikaSpeed: 0.4
+downSpeed: 0.1
+downSteps: true
+
+inkGauge: 50
+inkHealSpeed: 1
+inkHeal: 1
+
+healDelay: 50
+healSpeed: 1
+heal: 0.5
+
+inkType: WOOL
+inkCanselBlocks: 44:0,1,7,44:3

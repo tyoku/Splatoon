@@ -1,0 +1,4 @@
+name: Splatoon
+main: com.github.kotake545.splatoon.Splatoon
+version: 0.1
+commands:
