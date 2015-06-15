@@ -1,0 +1,2 @@
+# Splatoon
+Splatoon的な。
