@@ -48,32 +48,6 @@ public class BlockUtil {
 		return false;
 	}
 
-	public static List<Vector> getCircleVectors(Location lastloc,int radius){
-		List<Vector> vectors = new ArrayList<Vector>();
-        Location location = lastloc.clone();
-        for(int r = 0; r < radius; r++){
-	        double x, y = location.getY(), z;
-	        location.add(0, y, 0);
-		    int particles = r^2;
-	        for (int i = 0; i < particles; i++) {
-	            double angle = (double) 2 * Math.PI * i / particles;
-	            x = Math.cos(angle) * r;
-	            z = Math.sin(angle) * r;
-	            location.add(x, 0, z);
-	            try {
-	            	ParticleAPI.sendAllPlayer(EnumParticle.VILLAGER_HAPPY, location, 0,0, 0,(float)0.3,1);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-	            vectors.add(lastloc.subtract(location).toVector());
-
-	            location.subtract(x, 0, z);
-	        }
-	        location.subtract(0, y, 0);
-        }
-        return vectors;
-	}
-
 	public static List<Block> getCircleBlocks(Location loc,int radius){
 		List<Block> blocks = new ArrayList<Block>();
 		Block block = loc.getBlock();
@@ -86,11 +60,10 @@ public class BlockUtil {
         	/**
         	 * 円を一周描く
         	 */
-        	//r=1:check=1 , r=2:check=4, r=3:check=14 r=4:check=16 r=5:check=32 r=6:check=16
         	double check = 0;
         	if(0==r)check=1;
         	if(1==r)check=4;
-        	//ココの下から法則性??????
+        	//ココの下から法則性あれば見つけたい。ドット描写詳しくないので知らない。
         	if(2==r)check=16;
         	if(3==r)check=70;
         	if(4<=r&&r<=5)check=32;
