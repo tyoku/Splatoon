@@ -5,20 +5,30 @@ import java.util.List;
 
 import com.github.kotake545.splatoon.ProjectileInfo;
 
-//IkaWeaponから飛ばしたインク(雪球)はここで管理してく
-//void tick() 作ってSplatoonのスケジューラに入れてvectorとか管理してく
 public class ProjectileManager {
 	private static List<ProjectileInfo> projectiles;
 
 	public ProjectileManager(){
 		projectiles = new ArrayList<ProjectileInfo>();
 	}
-	
+
+	public void tick(){
+		for(int i = projectiles.size() - 1; i >= 0; i--){
+			ProjectileInfo pi = projectiles.get(i);
+			if(pi!=null){
+				pi.tick();
+			}
+		}
+	}
+
 	public void remove(ProjectileInfo projectileInfo) {
-//		if(){
-//
-//		}
-		//まだ
+		if(projectiles.contains(projectileInfo)){
+			projectiles.remove(projectileInfo);
+		}
+	}
+
+	public void addProjectileInfo(ProjectileInfo pi) {
+		projectiles.add(pi);
 	}
 
 }

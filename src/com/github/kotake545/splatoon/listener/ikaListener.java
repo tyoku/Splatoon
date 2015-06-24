@@ -1,7 +1,6 @@
 package com.github.kotake545.splatoon.listener;
 
 import org.bukkit.Location;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -69,13 +68,22 @@ public class ikaListener implements Listener{
 //			Location start = player.getLocation().clone().add(0,-0.1,0);
 //			start.add(vector);
 
-			//とりあえずここでgetCircleBlocks確認してるだけ。
+
 			Location start = player.getLocation().clone().add(0,-0.1,0);
-			for(Block block:BlockUtil.getCircleBlocks(start,3)){
-				Location set = block.getLocation();
-//				}
-				Splatoon.blockUtil.setBlock(set,a);
-			}
+
+//			EffectManager em = new EffectManager(EffectLib.instance());
+//
+//			DnaEffect effect = new DnaEffect(em);
+//			effect.setLocation(player.getLocation());
+//			effect.start();
+
+//			for(Block block:BlockUtil.getSphereBlocks(start,3,3,true,true,0)){
+////				Splatoon.blockUtil.setBlock(block.getLocation(),a);
+//				block.setTypeId(1);
+//			}
+			BlockUtil.Test(start,player.getLocation().getDirection(), 5);
+
+
 //			Splatoon.blockUtil.setBlock(player.getLocation().clone().add(0,-0.5,0),a);
 		}
 	}

@@ -236,6 +236,12 @@ public class ParticleAPI{
 			return (this.equals(BARRIER)|this.equals(BLOCK_CRACK)
 			|this.equals(BLOCK_DUST)|this.equals(WATER_DROP)|this.equals(ITEM_TAKE)|this.equals(MOB_APPEARANCE));
 		}
+
+		public static EnumParticle getEnumParticle(String typeName){
+			String snd = typeName.toUpperCase().replace(" ", "_");
+			EnumParticle type = EnumParticle.valueOf(snd);
+			return type;
+		}
 		@SuppressWarnings("deprecation")
 		public EnumParticle setItem(ItemStack item){
 			int id = item.getTypeId();

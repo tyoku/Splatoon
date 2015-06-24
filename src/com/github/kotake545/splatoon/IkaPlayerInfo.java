@@ -153,9 +153,9 @@ public class IkaPlayerInfo {
 
 	}
 
-	public boolean onClick(String clickType){
+	public boolean onClick(String type){
 		if(weapon!=null){
-			this.clickType = clickType;
+			weapon.onClick(type);
 			return true;
 		}
 		return false;

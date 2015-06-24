@@ -63,7 +63,7 @@ public class BlockUtil {
         	double check = 0;
         	if(0==r)check=1;
         	if(1==r)check=4;
-        	//ココの下から法則性あれば見つけたい。ドット描写詳しくないので知らない。
+        	//最小限の数で処理したいので7までifでチェック。法則性あれば解明したい
         	if(2==r)check=16;
         	if(3==r)check=70;
         	if(4<=r&&r<=5)check=32;
@@ -153,6 +153,92 @@ public class BlockUtil {
 		}
 		return false;
 	}
+
+	/**
+	 * Test
+	 * Vector vector に垂直な円を Location lastloc を中心に 半径 radius 生成するロジック考察テスト
+	 */
+	public static void Test(Location lastloc,Vector vector,float radius){
+		Location location = lastloc.clone();
+		location.setDirection(vector);
+
+        float grow = 0;
+    	double check = 360;
+    	for (double i = 0.0; i < check; i ++) {
+            double angle = (double) 2 * Math.PI * i / 360;
+        	float radian = (float) (Math.PI / 180);
+            Vector v = new Vector(Math.cos(angle) * radius, i * grow, Math.sin(angle) * radius);
+
+            rotateAroundAxisX(v, (location.getPitch() + 90) * radian);
+            rotateAroundAxisY(v, -location.getYaw() * radian);
+
+            location.add(v);
+            ParticleAPI.sendAllPlayer(EnumParticle.VILLAGER_HAPPY,location, 0, 0, 0, 0, 1);
+            location.subtract(v);
+    	}
+	}
+	public static final Vector rotateAroundAxisX(Vector v, double angle) {
+		double y, z, cos, sin;
+		cos = Math.cos(angle);
+		sin = Math.sin(angle);
+		y = v.getY() * cos - v.getZ() * sin;
+		z = v.getY() * sin + v.getZ() * cos;
+		return v.setY(y).setZ(z);
+	}
+
+	public static final Vector rotateAroundAxisY(Vector v, double angle) {
+		double x, z, cos, sin;
+		cos = Math.cos(angle);
+		sin = Math.sin(angle);
+		x = v.getX() * cos + v.getZ() * sin;
+		z = v.getX() * -sin + v.getZ() * cos;
+		return v.setX(x).setZ(z);
+	}
+
+	public static final Vector rotateAroundAxisZ(Vector v, double angle) {
+		double x, y, cos, sin;
+		cos = Math.cos(angle);
+		sin = Math.sin(angle);
+		x = v.getX() * cos - v.getY() * sin;
+		y = v.getX() * sin + v.getY() * cos;
+		return v.setX(x).setY(y);
+	}
+
+
+
+	/**
+	 *  Vectorからヨーを返して方角を取得するメソッド作ったけど使ってない。
+	 */
+	public static String getDirection(float yaw){
+	    if ((135.0D <= yaw) && (yaw < 225.0D))
+	        return "North";
+	      if ((225.0D <= yaw) && (yaw < 315.0D))
+	        return "East";
+	      if ((315.0D <= yaw) && (yaw <= 360.0D)||(0.0D <= yaw) && (yaw < 45.0D))//||
+	        return "South";
+	      if ((45.0D <= yaw) && (yaw < 135.0D))
+	        return "West";
+	    return null;
+	}
+	public static float getYaw(Location from,Location to){
+		Vector vector = to.subtract(from).toVector();
+		return getYaw(vector);
+	}
+	public static float getYaw(Vector vector){
+		double PI = 6.283185307179586D;
+	    double x = vector.getX();
+	    double z = vector.getZ();
+	    float yaw = 0;
+	    if ((x == 0.0D) && (z == 0.0D)) {
+	      return 0;
+	    }
+	    double theta = Math.atan2(-x, z);
+	    yaw = (float)Math.toDegrees((theta + PI) % PI);
+	    return yaw;
+	}
+
+
+
 	/**
 	 * フェンス抜け
 	 * 抜けるプレイヤー以外にはフェンスが存在するパケットを送り続ける。
