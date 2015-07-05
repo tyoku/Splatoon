@@ -1,17 +1,19 @@
 package com.github.kotake545.splatoon;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Squid;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import com.github.kotake545.splatoon.Manager.IkaClassManager;
 import com.github.kotake545.splatoon.Manager.IkaWeaponManager;
 import com.github.kotake545.splatoon.Packet.ParticleAPI;
 import com.github.kotake545.splatoon.Packet.ParticleAPI.EnumParticle;
@@ -26,6 +28,10 @@ public class IkaPlayerInfo {
 	public boolean swim = false;
 	public int NoDamageTick;
 	public int muteki;
+
+	public int healDelay = 0;
+	public int healSpeed = 0;
+
 	public int inkGauge = 0;
 	public Integer[] type = new Integer[]{0,0};
 
@@ -37,11 +43,15 @@ public class IkaPlayerInfo {
 	public List<IkaWeapon> weapons;
 	public ItemStack lasthandItem;
 	public String clickType;
+	private boolean lastSwim;
+	private float lastspeed = Splatoon.ikaConfig.moveSpeed;
+
+	public String SelectClassName;
+
+	private Squid kagemusya=null;
 
 	public IkaPlayerInfo(Player player) {
 		this.player = player;
-//		Splatoon.setCheckMovement(player,false);
-		ScoreBoardUtil.addPlayerTeam(player,"red");
 		this.name = ChatColor.stripColor(player.getName());
 		this.isIka = false;
 		this.NoDamageTick = 0;
@@ -54,9 +64,35 @@ public class IkaPlayerInfo {
 		this.type = new Integer[]{0,0};
 		this.inkGauge = Splatoon.ikaConfig.inkGauge;
 		this.weapon = null;
-		this.weapons = new ArrayList<IkaWeapon>();
 		this.lasthandItem = player.getItemInHand();
+		player.setFoodLevel(2);
 		this.clickType = "none";
+		this.SelectClassName = Splatoon.ikaConfig.defaultClass;
+
+		this.weapons = Splatoon.ikaWeaponManager.getAllWeapons();
+		for(int i = 0; i < weapons.size(); i++){
+			weapons.get(i).ika = this;
+		}
+	}
+
+	/**
+	 * 初期化
+	 */
+	public void Reset(){
+		this.canFly = false;
+		this.swim = false;
+		this.jumping = 0;
+		this.returndelay = 0;
+		this.type = new Integer[]{0,0};
+		this.inkGauge = Splatoon.ikaConfig.inkGauge;
+		this.weapon = null;
+		this.lasthandItem = player.getItemInHand();
+		player.setFoodLevel(2);
+		this.clickType = "none";
+		this.weapons = Splatoon.ikaWeaponManager.getAllWeapons();
+		for(int i = 0; i < weapons.size(); i++){
+			weapons.get(i).ika = this;
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -75,13 +111,30 @@ public class IkaPlayerInfo {
 		if(isMuteki()){
 			muteki--;
 		}
-		float speed = Splatoon.ikaConfig.moveSpeed;
-		player.removePotionEffect(PotionEffectType.POISON);
 		if(player.getGameMode()==GameMode.CREATIVE){
-			player.setWalkSpeed(speed);
+			player.setWalkSpeed(Splatoon.ikaConfig.moveSpeed);
 			return;
 		}
-		onIka();
+		if(ScoreBoardUtil.getPlayerTeam(player)==null){
+			if(canFly){
+				player.setAllowFlight(true);
+				player.setFlying(true);
+			}else{
+				player.setAllowFlight(false);
+				player.setFlying(false);
+			}
+			player.setWalkSpeed(Splatoon.ikaConfig.moveSpeed);
+			return;
+		}
+		if(Splatoon.MainTask.getGameStatus().equals("countdown")){
+			return;
+		}
+		if(player.getLocation().clone().add(0,0.1,0).getBlock().getType().getId()==9){
+			setNoDamageTick(0);
+			player.damage(player.getMaxHealth());
+			return;
+		}
+		onSwim();
 		if(canFly){
 			player.setAllowFlight(true);
 			player.setFlying(true);
@@ -89,8 +142,20 @@ public class IkaPlayerInfo {
 			player.setAllowFlight(false);
 			player.setFlying(false);
 		}
+		if(Splatoon.ikaConfig.ikaChangeforSneak&&player.isOnGround()){
+			if(!player.isSneaking()){
+				isIka=false;
+			}
+		}
+		boolean poisonFlag = false;
 		if(isIka){
+			player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,9999,0));
 			if(swim){
+				if(lastSwim){
+					//チャポン
+					player.getLocation().getWorld().playSound(player.getLocation(),Sound.SWIM,(float)1,2);
+					lastSwim=false;
+				}
 				if(tick%Splatoon.ikaConfig.inkHealSpeed==0&&inkGauge<Splatoon.ikaConfig.inkGauge){
 					inkGauge+=Splatoon.ikaConfig.inkHeal;
 					if(inkGauge>Splatoon.ikaConfig.inkGauge){
@@ -98,50 +163,86 @@ public class IkaPlayerInfo {
 					}
 				}
 				ParticleAPI.sendAllPlayer(EnumParticle.BLOCK_CRACK.setItemIDandData(this.type[0],this.type[1]),player.getLocation().clone().add(0,0,0),0.0F,0F,0.0F,0,10);
+				lastspeed =  Splatoon.ikaConfig.ikaSpeed;
+			}else{
+				//潜ってない時はイカの姿が現れる。
+				//LibsDisguiseかなんかでいいかなんて思ってます。
+				if(!lastSwim){
+					player.getLocation().getWorld().playSound(player.getLocation(),Sound.SWIM,(float)1,1);
+					lastSwim=true;
+				}
+				//潜ってから飛んでる間はspeedは変わらない。
+				if(player.isOnGround()){
+					lastspeed = 0.01F;
+				}
 			}
-			speed =  Splatoon.ikaConfig.ikaSpeed;
-			player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,9999,0));
-			//イカの時は行動不能
 		}else{
+			if(!lastSwim){
+				player.getLocation().getWorld().playSound(player.getLocation(),Sound.SWIM,(float)1,1);
+				lastSwim=true;
+			}
+			lastspeed = Splatoon.ikaConfig.moveSpeed;
 			player.removePotionEffect(PotionEffectType.INVISIBILITY);
 			if(player.isOnGround()){
 				Integer[] block = Utils.getBlock(player.getLocation().clone().add(0,-0.1,0));
 				if(checkEnemyTeamBlock(block)){
-					speed = Splatoon.ikaConfig.downSpeed;
+					lastspeed = Splatoon.ikaConfig.downSpeed;
 					player.addPotionEffect(new PotionEffect(PotionEffectType.POISON,9999,0));
+					poisonFlag=true;
 				}
 			}
 		}
+		if(!poisonFlag){
+			player.removePotionEffect(PotionEffectType.POISON);
+		}
 		if(isIka&&player.isSneaking()){
-			player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,9999,4));
+			player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,0,4));
 		}else{
 			player.removePotionEffect(PotionEffectType.SPEED);
 		}
-		if(player.getWalkSpeed()!=speed){
-			player.setWalkSpeed(speed);
+		if(player.getWalkSpeed()!=lastspeed){
+			player.setWalkSpeed(lastspeed);
 		}
 
+		healTick();
 		weaponTick();
-
 		ReflashBlock();
 		ReflashInk();
 		downstep();
 	}
 
+	public void healTick(){
+		healDelay--;
+		healSpeed--;
+		if(player.getHealth()>=player.getMaxHealth()){
+			return;
+		}
+		if(healDelay<=0&&healSpeed<=0){
+			Utils.addHealth(player,Splatoon.ikaConfig.heal);
+			healSpeed=Splatoon.ikaConfig.healSpeed;
+		}
+	}
+
 	public void weaponTick(){
 		ItemStack hand = player.getItemInHand();
 		if(hand != null){
-			if(tick % 10 == 0){
-				IkaWeapon iw = Splatoon.ikaWeaponManager.getWeapon(IkaWeaponManager.getItemDisplayName(hand));
-				weapon = iw;
-				if(iw == null||lasthandItem!=hand){
-					player.removePotionEffect(PotionEffectType.SLOW);
+			IkaWeapon iw = getWeapon(IkaWeaponManager.getItemDisplayName(hand));
+			weapon = iw;
+			if(iw == null||lasthandItem!=hand){
+				player.removePotionEffect(PotionEffectType.SLOW);
+				player.removePotionEffect(PotionEffectType.SLOW_DIGGING);
+			}
+			if(iw!=null){
+				if(iw.miningFatigue>0){
+					player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING,100,iw.miningFatigue-1));
 				}
 			}
+			lasthandItem=hand;
 		}else{
 			weapon = null;
 			lasthandItem = null;
 			player.removePotionEffect(PotionEffectType.SLOW);
+			player.removePotionEffect(PotionEffectType.SLOW_DIGGING);
 		}
 		for(int i = weapons.size() - 1; i >= 0; i--){
 			IkaWeapon iw = weapons.get(i);
@@ -149,11 +250,20 @@ public class IkaPlayerInfo {
 				iw.tick();
 			}
 		}
-
-
 	}
 
+	public IkaWeapon getWeapon(String itemDisplayName) {
+		for(int i = weapons.size() - 1; i >= 0; i--){
+			if(weapons.get(i).getName().toLowerCase().equals(itemDisplayName)){
+				return weapons.get(i);
+			}
+		}
+		return null;
+	}
 	public boolean onClick(String type){
+		if(isIka){
+			return false;
+		}
 		if(weapon!=null){
 			weapon.onClick(type);
 			return true;
@@ -170,48 +280,78 @@ public class IkaPlayerInfo {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	public void onIka(){
+		if(Splatoon.ikaConfig.ikaChangeforSneak){
+			if(!player.isSneaking()){
+				isIka=true;
+			}else{
+				if(!player.isOnGround()&&isIka){
+					if(checkWall()){
+						isIka=true;
+						return;
+					}
+				}
+				isIka=false;
+			}
+			return;
+		}
+		if(isIka){
+			isIka=false;
+		}else{
+			isIka=true;
+		}
+	}
+
+	public void setClass(String className){
+		this.SelectClassName = className;
+		List<List<ItemStack>> inv = Splatoon.ikaClassManager.getClass(className);
+		if(inv!=null){
+			IkaClassManager.setInventry(player, inv);
+		}else{
+			inv = Splatoon.ikaClassManager.getClass(Splatoon.ikaConfig.defaultClass);
+			if(inv!=null){
+				IkaClassManager.setInventry(player,inv);
+			}
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public void onSwim(){
 		canFly = false;
 		swim = false;
 		/**
 		 * イカ壁同化中...
 		 */
-		if(!player.isOnGround()&&isIka){
-			if(checkWall()){
-				canFly = true;
-				swim = true;
-				return;
-			}
-		}
-		if(player.isSneaking()){
+		if(isIka){
 			Location loc = player.getLocation();
 			if(player.isOnGround()){
 				Integer[] block = Utils.getBlock(loc.clone().add(0,-0.1,0));
 				if(checkTeamBlock(block)){
-					isIka = true;
 					swim = true;
 					returndelay = 0;
 				}else{
-					if(returndelay>=14&&!isJumping()){
-						isIka = false;
-						return;
+					if(returndelay<10&&isJumping()){
+						swim = true;
+					}else
+					if(returndelay<15&&Utils.getBlock(loc.clone().add(0,-0.1,0))[0]==0){
+						swim = true;
+					}else
+					//ここの数はガクガクなるの防止なのでイカ状態の移動速度によって変更していいかも 速いほど少なく
+					if(returndelay<3&&player.isSneaking()){
+						swim = true;
 					}
-					if(block[0]!=0&&Utils.getBlock(loc.clone())[0]==0){
-						isIka = false;
-					}
+//					if(swim&&block[0]!=0&&Utils.getBlock(loc.clone())[0]==0){
+//						swim = false;
+//					}
 				}
 			}else{
 				if(checkWall()){
-					isIka = true;
 					canFly = true;
 					swim = true;
 				}else{
 					canFly = false;
 				}
 			}
-		}else{
-			isIka = false;
 		}
 	}
 	public void downstep(){
@@ -289,6 +429,12 @@ public class IkaPlayerInfo {
 			return false;
 		}
 	}
+	public void setNoDamageTick(int i) {
+		this.NoDamageTick=i;
+	}
+	public void setMuteki(int i) {
+		this.muteki = i;
+	}
 	public boolean isJumping() {
 		if(jumping>0){
 			return true;
@@ -314,5 +460,9 @@ public class IkaPlayerInfo {
 
 	public void onJump() {
 		jumping = 10;
+	}
+
+	public void onClass() {
+		setClass(SelectClassName);
 	}
 }

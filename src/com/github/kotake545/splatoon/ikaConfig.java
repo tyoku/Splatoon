@@ -2,6 +2,7 @@ package com.github.kotake545.splatoon;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -9,6 +10,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import com.github.kotake545.splatoon.util.Utils;
 
 public class ikaConfig {
+	public boolean ikaChangeforSneak = false; //イカチェンジ Drop か Sneak か
+
 	public boolean blockset = false; //ワールドには書き込まない
 	public boolean particle = true; //パーティクルのON/OFF
 
@@ -28,7 +31,12 @@ public class ikaConfig {
 	public List<Integer[]> inkCanselBlocks = new ArrayList<Integer[]>(); //インクを受け付けないブロック
 	public List<Integer[]> fenceBlocks = new ArrayList<Integer[]>(); //フェンス
 
+	public Hashtable<String,Integer[]> shootPaintSound=new Hashtable<String,Integer[]>();
+	public Hashtable<String,Integer[]> usePaintSound=new Hashtable<String,Integer[]>();
+
 	public boolean downSteps = true;
+
+	public String defaultClass = "";
 
 	public ikaConfig(){
         File configFile = new File(Splatoon.getInstance().getDataFolder(), "config.yml");
@@ -47,6 +55,7 @@ public class ikaConfig {
         healDelay = config.getInt("healDelay");
         healSpeed = config.getInt("healSpeed");
         heal = (float) config.getDouble("heal");
+        defaultClass = config.getString("defaultClass");
         if(config.getString("inkType")!=null){
             if(config.getString("inkType").toUpperCase().equals("WOOL")){
             	inkWool = true;
@@ -54,11 +63,20 @@ public class ikaConfig {
             	inkWool = false;
             }
         }
+        if(config.getString("ikaChangeEvent")!=null){
+            if(config.getString("ikaChangeEvent").toUpperCase().equals("SNEAK")){
+            	ikaChangeforSneak = true;
+            }else{
+            	ikaChangeforSneak = false;
+            }
+        }
         if(config.getString("inkCanselBlocks")!=null){
             inkCanselBlocks = getInkCanselBlocks(config.getString("inkCanselBlocks"));
         }else{
         	inkCanselBlocks.add(new Integer[]{0,0});
         }
+        shootPaintSound = IkaWeapon.getSoundData(config.getString("shootPaintSounds"));
+        usePaintSound = IkaWeapon.getSoundData(config.getString("usePaintSounds"));
         downSteps = config.getBoolean("downSteps");
 	}
 
@@ -69,6 +87,7 @@ public class ikaConfig {
 			Integer[] ids = new Integer[]{0,0};
 			if(Utils.isNumber(i)){
 				ids[0]=Integer.valueOf(i);
+				ids[1]=-1;
 				blocks.add(ids);
 				continue;
 			}else{

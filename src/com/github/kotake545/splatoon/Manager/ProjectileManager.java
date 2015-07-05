@@ -3,6 +3,8 @@ package com.github.kotake545.splatoon.Manager;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.entity.Projectile;
+
 import com.github.kotake545.splatoon.ProjectileInfo;
 
 public class ProjectileManager {
@@ -31,4 +33,12 @@ public class ProjectileManager {
 		projectiles.add(pi);
 	}
 
+	public ProjectileInfo getProjectileInfo(Projectile entity) {
+		for(int i = projectiles.size() - 1; i >= 0; i--){
+			if(projectiles.get(i).getProjectile().getEntityId() == entity.getEntityId()){
+				return projectiles.get(i);
+			}
+		}
+		return null;
+	}
 }

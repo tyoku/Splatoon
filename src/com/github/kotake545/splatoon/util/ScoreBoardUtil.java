@@ -1,8 +1,14 @@
 package com.github.kotake545.splatoon.util;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
@@ -90,19 +96,64 @@ public class ScoreBoardUtil {
 //		RefreshTeamAllPlayer();
 	}
 
-    public static ChatColor ColorReplace(String color) {
-    	boolean check = false;
-    	for(String name:colors){
-    		if(name.equals(color)){
-    			check = true;
-    			break;
+	public static ChatColor ColorReplace(String color) {
+		boolean check = false;
+		for(String name:colors){
+			if(name.equals(color)){
+				check = true;
+				break;
+			}
+		}
+		if(check){
+			return ChatColor.valueOf(color.toUpperCase());
+		}else{
+			return ChatColor.WHITE;
+		}
+	}
+
+	public static void setRandomTeam(List<String> list){
+		ArrayList<Player> players = new ArrayList<Player>();
+		for(Player player:Splatoon.getOnlinePlayers()){
+			if (player.getGameMode()==GameMode.CREATIVE){
+				continue;
+			}
+		}
+		for ( Player p : Bukkit.getOnlinePlayers()) {
+			if ( p.getGameMode() == GameMode.CREATIVE){
+				continue;
+			}
+			players.add(p);
+		}
+		Random rand = new Random();
+		for ( int i=0; i<players.size(); i++ ) {
+			int a = rand.nextInt(players.size());
+			Player u = players.get(i);
+			players.set(i, players.get(a));
+			players.set(a, u);
+		}
+		for ( int i=0; i<players.size(); i++ ) {
+			int r = i % list.size();
+			addPlayerTeam(players.get(i),list.get(r));
+			players.get(i).sendMessage(Splatoon.format+"あなたは["+ColorReplace(list.get(r))+list.get(r)+ChatColor.RESET+"]チームに決定しました。");
+		}
+	}
+
+    public static void SpawnTeleport(Player player){
+    	Location location = getSpawnLocation(player);
+    	player.teleport(location);
+    }
+    public static Location getSpawnLocation(Player player){
+    	Location location = player.getWorld().getSpawnLocation();
+    	Team team = getPlayerTeam(player);
+    	if(team!=null){
+    		if(Splatoon.MainTask.getGameStatus().equals("countdown")||Splatoon.MainTask.getGameStatus().equals("gametime")){
+    			Location spawn = Splatoon.MainTask.gameStage.getSpawn(team.getName());
+    			if(spawn!=null){
+    				location = spawn;
+    			}
     		}
     	}
-    	if(check){
-    		return ChatColor.valueOf(color.toUpperCase());
-    	}else{
-    		return ChatColor.WHITE;
-    	}
+    	return location;
     }
 
 	public static Team getPlayerTeam(Player player) {

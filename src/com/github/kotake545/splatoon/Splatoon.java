@@ -7,19 +7,25 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.github.kotake545.splatoon.Manager.IkaClassManager;
 import com.github.kotake545.splatoon.Manager.IkaManager;
+import com.github.kotake545.splatoon.Manager.IkaStageManager;
 import com.github.kotake545.splatoon.Manager.IkaWeaponManager;
 import com.github.kotake545.splatoon.Manager.ProjectileManager;
+import com.github.kotake545.splatoon.commands.IkaClassCommand;
+import com.github.kotake545.splatoon.commands.IkaSplatoonCommand;
+import com.github.kotake545.splatoon.commands.IkaStageCommand;
+import com.github.kotake545.splatoon.commands.IkaWeaponCommand;
 import com.github.kotake545.splatoon.listener.ikaListener;
+import com.github.kotake545.splatoon.listener.projectileListener;
 import com.github.kotake545.splatoon.util.BlockUtil;
-
-
 
 public class Splatoon extends JavaPlugin implements Listener {
 	public static Logger logger;
@@ -28,23 +34,38 @@ public class Splatoon extends JavaPlugin implements Listener {
 	public static IkaManager ikaManager;
 	public static BlockUtil blockUtil;
 	public static IkaWeaponManager ikaWeaponManager;
+	public static IkaStageManager ikaStageManager;
 	public static ProjectileManager projectileManager;
+	public static IkaClassManager ikaClassManager;
+	public static Task MainTask;
+	public static String format = ChatColor.AQUA+""+ChatColor.BOLD+"[Splatoon]"+ChatColor.RESET;
 
  	public void onEnable(){
  		logger = this.getLogger();
  		instance = this;
  		ikaConfig = new ikaConfig();
  		ikaManager = new IkaManager();
- 		ikaManager.reload();
  		blockUtil = new BlockUtil();
  		ikaWeaponManager = new IkaWeaponManager();
+ 		ikaStageManager = new IkaStageManager();
  		projectileManager = new ProjectileManager();
+ 		ikaClassManager = new IkaClassManager();
+ 		MainTask = new Task();
+
+ 		ikaClassManager.loadIkaClass();
+ 		ikaWeaponManager.loadIkaWeapons();
+ 		ikaStageManager.loadIkaStages();
+ 		ikaManager.reload();
 
 		PluginManager pm = this.getServer().getPluginManager();
 		pm.registerEvents(new ikaListener(), this);
+		pm.registerEvents(new projectileListener(), this);
 
 		Task();
-//		getCommand("test").setExecutor(new TestCommand());
+		getCommand("ikaweapon").setExecutor(new IkaWeaponCommand());
+		getCommand("splatoon").setExecutor(new IkaSplatoonCommand());
+		getCommand("ikastage").setExecutor(new IkaStageCommand());
+		getCommand("ikaclass").setExecutor(new IkaClassCommand());
 	}
 
 	public void onDisable() {
@@ -54,7 +75,9 @@ public class Splatoon extends JavaPlugin implements Listener {
 	public void Task(){
 		Bukkit.getScheduler().runTaskTimer(instance, new Runnable(){
 			public void run(){
+				MainTask.timer();
 				ikaManager.tick();
+				projectileManager.tick();
 			}
 		}, 1L, 1L);
 	}
@@ -71,6 +94,15 @@ public class Splatoon extends JavaPlugin implements Listener {
         }
         return YamlConfiguration.loadConfiguration(file);
     }
+    /**
+     * Config として読み込む
+     * @param file
+     * @return
+     */
+    public static YamlConfiguration getYml(File file) {
+        return YamlConfiguration.loadConfiguration(file);
+    }
+
     public static File getFile(String yml){
     	File file;
 		file = new File(Splatoon.instance.getDataFolder() + File.separator +yml +".yml");
@@ -87,6 +119,10 @@ public class Splatoon extends JavaPlugin implements Listener {
 
 	public static Splatoon getInstance(){
 		return instance;
+	}
+
+	public static String getPluginFolder(){
+		return Splatoon.instance.getDataFolder().getAbsolutePath();
 	}
 
 	public static void setCheckMovement(Player p,boolean check) throws Exception{

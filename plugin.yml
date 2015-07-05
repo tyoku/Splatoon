@@ -1,4 +1,28 @@
-name: Splatoon
+name: SplatoonNanoka
 main: com.github.kotake545.splatoon.Splatoon
 version: 0.1
 commands:
+ ikaweapon:
+    description: ikaweapon
+    aliases: [ikaweapon, iw]
+    usage: /ikaweapon
+    permission: splatoon.ikaweapon
+    permission-message: You don't have <permission>
+ splatoon:
+    description: splatoon
+    aliases: [splatoon, is, ikasplatoon]
+    usage: /splatoon
+    permission: splatoon.main
+    permission-message: You don't have <permission>
+ ikastage:
+    description: ikastage
+    aliases: [ikastage, stage]
+    usage: /ikastage
+    permission: splatoon.ikastage
+    permission-message: You don't have <permission>
+ ikaclass:
+    description: ikaclass
+    aliases: [ikaclass, class]
+    usage: /ikaclass
+    permission: splatoon.ikaclass
+    permission-message: You don't have <permission>

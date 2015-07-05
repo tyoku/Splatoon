@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 
 import com.github.kotake545.splatoon.IkaPlayerInfo;
 import com.github.kotake545.splatoon.Splatoon;
+import com.github.kotake545.splatoon.util.ScoreBoardUtil;
 
 public class IkaManager {
 	private static List<IkaPlayerInfo> ikaPlayers;
@@ -49,6 +50,7 @@ public class IkaManager {
 
 	public void reload() {
 		for(Player player:Splatoon.getOnlinePlayers()){
+			ScoreBoardUtil.leavePlayerTeam(player);
 			setIka(player);
 		}
 	}

@@ -1,8 +1,10 @@
-blockSet: false
+blockSet: true
 particle: true
+ikaChangeEvent: SNEAK
+defaultClass: default
 
-moveSpeed: 0.2
-ikaSpeed: 0.4
+moveSpeed: 0.3
+ikaSpeed: 0.6
 downSpeed: 0.1
 downSteps: true
 
@@ -10,9 +12,12 @@ inkGauge: 50
 inkHealSpeed: 1
 inkHeal: 1
 
-healDelay: 50
+healDelay: 60
 healSpeed: 1
-heal: 0.5
+heal: 0.1
 
 inkType: WOOL
-inkCanselBlocks: 44:0,1,7,44:3
+inkCanselBlocks: 6,7,8,9,10,11,20,26,31,38,50,55,65,66,69,70,75,76,78,106,117,131,140,143,144,44:0
+
+shootPaintSounds: SLIME_ATTACK/1/2
+usePaintSounds: SLIME_ATTACK/1/2
