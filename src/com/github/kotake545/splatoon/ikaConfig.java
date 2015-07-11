@@ -5,15 +5,24 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.github.kotake545.splatoon.util.Utils;
 
 public class ikaConfig {
+	public String Version = null;
+
 	public boolean ikaChangeforSneak = false; //イカチェンジ Drop か Sneak か
+	public int spectatorTime = 5; //spectatorTime
+	public boolean  spectatorMode = false;//
+
+	public boolean changeSwimLength = true;
+	public float isSwimLength = 0.1F;
 
 	public boolean blockset = false; //ワールドには書き込まない
 	public boolean particle = true; //パーティクルのON/OFF
+	public boolean damageEffect = true; //エフェクト
 
 	public float moveSpeed = 0.2F; //デフォルト移動速度
 	public float ikaSpeed = 0.4F; //イカ移動速度 スニークで移動速度下がるから チェック時に2倍にして
@@ -38,12 +47,26 @@ public class ikaConfig {
 
 	public String defaultClass = "";
 
+	public double deadInkRadius = 3.0D;
+
+	public boolean changeColorGlass = false;
+
 	public ikaConfig(){
+		try {
+			Object obj = Bukkit.getServer().getClass().getDeclaredMethod("getServer", new Class[0]).invoke(Bukkit.getServer(), new Object[0]);
+			Object propertyManager = obj.getClass().getDeclaredMethod("getPropertyManager", new Class[0]).invoke(obj, new Object[0]);
+			Version = propertyManager.getClass().getPackage().getName();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
         File configFile = new File(Splatoon.getInstance().getDataFolder(), "config.yml");
         if ( !configFile.exists() ) {
         	Splatoon.getInstance().saveDefaultConfig();
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        spectatorMode = config.getBoolean("spectatorMode");
+        spectatorTime = config.getInt("spectatorTime");
+        deadInkRadius = config.getDouble("deadInkRadius");
         blockset = config.getBoolean("blockSet");
         particle = config.getBoolean("particle");
         moveSpeed = (float) config.getDouble("moveSpeed");
@@ -56,6 +79,8 @@ public class ikaConfig {
         healSpeed = config.getInt("healSpeed");
         heal = (float) config.getDouble("heal");
         defaultClass = config.getString("defaultClass");
+        damageEffect = config.getBoolean("damageEffect");
+        changeColorGlass = config.getBoolean("changeColorGlass");
         if(config.getString("inkType")!=null){
             if(config.getString("inkType").toUpperCase().equals("WOOL")){
             	inkWool = true;
@@ -114,5 +139,4 @@ public class ikaConfig {
 		}
 		return blocks;
 	}
-
 }

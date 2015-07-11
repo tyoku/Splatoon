@@ -1,6 +1,7 @@
 package com.github.kotake545.splatoon;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.util.Vector;
@@ -90,7 +91,7 @@ public class ProjectileInfo {
 				}
 			}
 		}
-		Splatoon.blockUtil.setBlock(from,a);
+//		Splatoon.blockUtil.setBlock(from,a);
 		double radius = weapon.getHitRadius();
 		ParticleAPI.sendAllPlayer(EnumParticle.BLOCK_DUST.setItemIDandData(a[0], a[1]),from,1F,0.2F,1F,0,5);
 		for(String name:Splatoon.ikaConfig.shootPaintSound.keySet()){
@@ -119,5 +120,13 @@ public class ProjectileInfo {
 
 	public double getDamage(){
 		return damage;
+	}
+
+	public void onKnockBack(Entity entity) {
+		if(weapon.shootKnockback > 0.0D){
+			Vector speed = vector;
+			speed.normalize().setY(0.6D).multiply(weapon.shootKnockback / 4.0D);
+			entity.setVelocity(speed);
+		}
 	}
 }

@@ -71,10 +71,10 @@ public class IkaWeaponManager {
 				ikaWeapon.weaponType=set;
 			}
 			if(load.equals("rightclickevent")){
-				ikaWeapon.rightClick=set;
+				ikaWeapon.rightClick=set.toLowerCase();
 			}
 			if(load.equals("leftclickevent")){
-				ikaWeapon.leftClick=set;
+				ikaWeapon.leftClick=set.toLowerCase();
 			}
 			if(load.equals("miningfatigue")){
 				ikaWeapon.miningFatigue=Integer.parseInt(set);
@@ -133,6 +133,18 @@ public class IkaWeaponManager {
 			if(load.equals("fullauto")){
 				ikaWeapon.fullAuto=Boolean.parseBoolean(set);
 			}
+			if(load.equals("disablefirstuse")){
+				ikaWeapon.DisableFirstUse=Boolean.parseBoolean(set);
+			}
+			if(load.equals("shootreaction")){
+				ikaWeapon.shootReaction=Double.parseDouble(set);
+			}
+			if(load.equals("shootrecoil")){
+				ikaWeapon.shootRecoil=Double.parseDouble(set);
+			}
+			if(load.equals("shootknockback")){
+				ikaWeapon.shootKnockback=Double.parseDouble(set);
+			}
 		} catch (Exception e) {
 
 		}
@@ -150,6 +162,10 @@ public class IkaWeaponManager {
 			return "";
 		}
 		String name = ChatColor.stripColor(displayname);
+		if(name.indexOf(" [") <= 0){
+			return name;
+		}
+		name = name.substring(0,name.indexOf(" ["));
 		return name;
 	}
 

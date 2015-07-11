@@ -10,10 +10,12 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import com.github.kotake545.splatoon.IkaPlayerInfo;
 import com.github.kotake545.splatoon.Splatoon;
 
 public class Utils {
@@ -66,6 +68,24 @@ public class Utils {
 		}else{
 			//なかった時、自前のサウンドをチェックして再生できるなら再生する。
 		}
+	}
+
+	public static void Respawn(Player player){
+		/**
+		 * 最後に与えられたダメージ初期化。
+		 */
+		EntityDamageEvent ede = new EntityDamageEvent(player, EntityDamageEvent.DamageCause.SUICIDE,0);
+//		Bukkit.getPluginManager().callEvent(ede);
+//		if (ede.isCancelled()) return;
+		ede.getEntity().setLastDamageCause(ede);
+		Location loc = ScoreBoardUtil.getSpawnLocation(player);
+		IkaPlayerInfo ika = Splatoon.ikaManager.getIka(player);
+		ika.setSpectator(false);
+		Utils.heal(player);
+		ika.Reset();
+		ika.setMuteki(20*5);
+		ika.onClass();
+		player.teleport(loc,TeleportCause.PLUGIN);
 	}
 
 	public static void damage(EntityDamageEvent event, double d){

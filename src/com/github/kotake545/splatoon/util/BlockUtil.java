@@ -23,18 +23,33 @@ public class BlockUtil {
 	 */
 
 	@SuppressWarnings("deprecation")
-	public void setBlock(Location loc,Integer[] block){
+	public boolean setBlock(Location loc,Integer[] block){
 		if(block!=null){
 			if(containsCanselBlocks(getIntegerBlock(loc))){
-				return;
+				return false;
 			}
 			if(Splatoon.ikaConfig.blockset){
+				int id = block[0];
+				if(Splatoon.ikaConfig.changeColorGlass&&Splatoon.ikaConfig.inkWool){
+					if(loc.getBlock().getTypeId()==95||loc.getBlock().getTypeId()==160){
+						id=loc.getBlock().getTypeId();
+					}
+				}
+				if(loc.getBlock().getTypeId()==id&&loc.getBlock().getData()==(byte)(int)block[1]){
+					return false;
+				}
 				setBeforeBlock(loc.getBlock());
-				loc.getBlock().setTypeIdAndData(block[0],(byte)(int)block[1],true);
+				loc.getBlock().setTypeIdAndData(id,(byte)(int)block[1],true);
+				return true;
 			}else{
+				/**
+				 * 使用しない
+				 */
 				setPacketBlock(loc.getBlock(), block);
+				return true;
 			}
 		}
+		return false;
 	}
 
 	public static List<Location> getPaintVerticalLine(final Location loc,final Vector vector,int add,float distance){
@@ -72,7 +87,7 @@ public class BlockUtil {
 	public static List<Location> getLine(Location from,Location to){
 		List<Location> locations = new ArrayList<Location>();
 		Location location = from.clone();
-		int count=(int) to.distance(from)*2;
+		int count=(int) to.distance(from) *2 ;
 		to.subtract(from.getX(),from.getY(),from.getZ());
 		double d=1D/count;
 		double x=to.getX()*d;

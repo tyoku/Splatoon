@@ -46,6 +46,13 @@ public class IkaSplatoonCommand extends IkaCommandExecuter {
 			if(args[0].toLowerCase().equals("join")){
 				String team = args[1];
 				if(3<=args.length){
+					if(args[2].equals("@a")){
+						for(Player player:Splatoon.getOnlinePlayers()){
+							ScoreBoardUtil.addPlayerTeam(player,team);
+						}
+						sender.sendMessage(Splatoon.format+"全てのプレイヤーを"+team+"チームに参加させました。");
+						return true;
+					}
 					Player player=Bukkit.getPlayer(args[2]);
 					if( player!=null&& player.isOnline()){
 						ScoreBoardUtil.addPlayerTeam(player,team);
@@ -62,6 +69,13 @@ public class IkaSplatoonCommand extends IkaCommandExecuter {
 				return true;
 			}
 			if(args[0].toLowerCase().equals("leave")){
+				if(args[1].equals("@a")){
+					for(Player player:Splatoon.getOnlinePlayers()){
+						ScoreBoardUtil.leavePlayerTeam(player);
+					}
+					sender.sendMessage(Splatoon.format+"全てのプレイヤーをチームから脱退させました。");
+					return true;
+				}
 				Player player=Bukkit.getPlayer(args[1]);
 				if( player!=null&& player.isOnline()){
 					ScoreBoardUtil.leavePlayerTeam(player);

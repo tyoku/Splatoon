@@ -26,7 +26,7 @@ public class IkaStage {
 	public Hashtable<String,Location> teams;
 	public int gameStart = 30;
 	public int countDown = 10;
-	public int gameTime = 300;
+	public int gameTime = 180;
 
 
 	private int timer = 0;
@@ -63,6 +63,10 @@ public class IkaStage {
 		}
 	}
 
+	public int getTimer(){
+		return timer;
+	}
+
 
 	public IkaStage clone(){
 		IkaStage clone = new IkaStage();
@@ -78,7 +82,7 @@ public class IkaStage {
 		this.teams = new Hashtable<String, Location>();
 		this.gameStart = 30;
 		this.countDown = 10;
-		this.gameTime = 300;
+		this.gameTime = 180;
 	}
 
 	public void setTeamAndSpawn(String team, String spawn) {
@@ -120,11 +124,11 @@ public class IkaStage {
 		return this.stageName;
 	}
 	public void onGameTime(){
-		this.gameTimeActive = true;
-		this.timer = gameTime;
 		for(Player player:Splatoon.getOnlinePlayers()){
 			player.sendMessage(Splatoon.format+"ゲームが開始しました。");
 		}
+		this.gameTimeActive = true;
+		this.timer = gameTime;
 	}
 
 	public void onCountDown(){

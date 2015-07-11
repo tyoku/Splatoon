@@ -1,5 +1,14 @@
 package com.github.kotake545.splatoon;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+
+import com.github.kotake545.splatoon.util.ScoreBoardUtil;
+
+
 public class Task {
 	private int ticks;
 	public IkaStage gameStage = null;
@@ -11,11 +20,61 @@ public class Task {
 
 	public void timer(){
 		ticks++;
-		if(ticks%20==0){
-			if(gameStage!=null){
+		if(gameStage!=null){
+			if(ticks%20==0){
 				gameStage.timer();
+
+//				for(Player player:Splatoon.getOnlinePlayers()){
+//					setScoreBoard(player);
+//				}
 			}
 		}
+		for(Player player:Splatoon.getOnlinePlayers()){
+			setScoreBoard(player);
+		}
+	}
+
+	public void setScoreBoard(Player player){
+		List<String> a = new ArrayList<String>();
+		if(gameStage!=null){
+			if(gameStage.gameStartActive){
+				a.add("ゲーム開始まで:"+gameStage.getTimer()+"秒");
+				a.add(" ");
+			}else if(gameStage.countDownActive){
+				a.add("カウントダウン:"+ChatColor.RED+""+ChatColor.BOLD+gameStage.getTimer());
+				a.add(" ");
+			}else if(gameStage.gameTimeActive){
+				a.add(ChatColor.AQUA+""+ChatColor.BOLD+" Splatoon ");
+				a.add("-------------"+ChatColor.DARK_GREEN);
+				a.add(ChatColor.DARK_GREEN+"Time: "+ChatColor.WHITE+replaceMinutes(gameStage.getTimer()));
+				a.add(" ");
+				a.add(ChatColor.GOLD+"Points: "+ChatColor.WHITE+"0000");
+				a.add(ChatColor.GREEN+"Special:"+ChatColor.WHITE+"000%");
+				a.add(ChatColor.GREEN+""+ChatColor.GRAY+"▮▮▮▮▮▮▮▮▮▮▮▮");
+				a.add("-------------"+ChatColor.DARK_AQUA);
+			}
+		}
+		ScoreBoardUtil.setSidebar(player,a, true);
+	}
+
+	public static String replaceMinutes(int secconds){
+		String ti = "";
+		String mi = "";
+    	int min = 0;
+    	int time = secconds;
+    	if(time >= 60){
+    		min = time/60;
+    		time = time -min*60;
+    	}
+    	ti = ""+time;
+    	mi = ""+min;
+    	if(time<10){
+    		ti = "0"+ti;
+    	}
+    	if(min<10){
+    		mi = "0"+mi;
+    	}
+    	return mi+":"+ti;
 	}
 
 	public String getGameStatus(){

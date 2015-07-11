@@ -1,14 +1,18 @@
 package com.github.kotake545.splatoon.listener;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.util.Vector;
 
+import com.github.kotake545.splatoon.IkaPlayerInfo;
 import com.github.kotake545.splatoon.ProjectileInfo;
 import com.github.kotake545.splatoon.Splatoon;
 
@@ -33,10 +37,25 @@ public class projectileListener implements Listener{
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onProjectileDamage(EntityDamageByEntityEvent event){
+		if(event.getDamager() instanceof Player&&event.getCause()==DamageCause.ENTITY_ATTACK){
+			IkaPlayerInfo ika = Splatoon.ikaManager.getIka((Player)event.getDamager());
+			ika.onClick("left");
+
+			if(ika.isSpectator()){
+				event.setCancelled(true);
+				return;
+			}
+			if(!ika.getPlayer().isOp()&&ika.getPlayer().getGameMode()!=GameMode.CREATIVE){
+				event.setCancelled(true);
+				return;
+			}
+		}
 		if(event.getDamager() instanceof Projectile){
 			ProjectileInfo pi=Splatoon.projectileManager.getProjectileInfo((Projectile) event.getDamager());
 			if(pi!=null){
 				event.setDamage(pi.getDamage());
+				pi.onKnockBack(event.getEntity());
+
 				Location from = event.getEntity().getLocation();
 				for(double i = 0.2D; i < 4.0D; i += 0.2D){
 					if(from.getBlock().getTypeId() == 0){

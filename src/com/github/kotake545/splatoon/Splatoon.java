@@ -8,8 +8,12 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Squid;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -51,6 +55,7 @@ public class Splatoon extends JavaPlugin implements Listener {
  		projectileManager = new ProjectileManager();
  		ikaClassManager = new IkaClassManager();
  		MainTask = new Task();
+//		removeAllSquid();
 
  		ikaClassManager.loadIkaClass();
  		ikaWeaponManager.loadIkaWeapons();
@@ -70,6 +75,7 @@ public class Splatoon extends JavaPlugin implements Listener {
 
 	public void onDisable() {
 		blockUtil.returnBeforeBlocks();
+//		removeAllSquid();
 	}
 
 	public void Task(){
@@ -80,6 +86,17 @@ public class Splatoon extends JavaPlugin implements Listener {
 				projectileManager.tick();
 			}
 		}, 1L, 1L);
+	}
+
+	public void removeAllSquid() {
+		for ( World world : Bukkit.getWorlds() ) {
+			for ( Entity entity : world.getEntities() ) {
+				if (entity.getType()==EntityType.SQUID) {
+					Squid ika = (Squid)entity;
+					ika.remove();
+				}
+			}
+		}
 	}
     public static YamlConfiguration getConfiguration(String configName) {
         File file = new File(

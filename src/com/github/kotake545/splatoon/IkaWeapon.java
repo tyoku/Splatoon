@@ -3,6 +3,7 @@ package com.github.kotake545.splatoon;
 import java.util.Hashtable;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -16,6 +17,7 @@ import org.bukkit.util.Vector;
 import com.github.kotake545.splatoon.Packet.ParticleAPI;
 import com.github.kotake545.splatoon.Packet.ParticleAPI.EnumParticle;
 import com.github.kotake545.splatoon.util.BlockUtil;
+import com.github.kotake545.splatoon.util.ScoreBoardUtil;
 import com.github.kotake545.splatoon.util.Utils;
 
 
@@ -26,6 +28,7 @@ public class IkaWeapon {
 
 	public String rightClick = "use";
 	public String leftClick = "shoot";
+	public boolean DisableFirstUse=false; //shootを使ってからでないとuseが使えなくなります。
 
 	public int miningFatigue;
 	public int Mdelay;
@@ -37,6 +40,9 @@ public class IkaWeapon {
 	public double damage;
 	public Hashtable<String,Integer[]> sound = new Hashtable<String, Integer[]>();
 
+	public double shootReaction;
+	public double shootRecoil;
+	public double shootKnockback;
 	public double shootSpeed;
 	public int shootNeedInk;
 	public int shootDistance;
@@ -52,6 +58,7 @@ public class IkaWeapon {
 
 	//##############################################
 
+	private ItemStack itemStack;
 	private int ticks;
 	public IkaPlayerInfo ika;
 	private String lastClickType = "";
@@ -61,25 +68,39 @@ public class IkaWeapon {
 	private int Scheck =0;
 	private int Sdelay;
 
+	private int DisableFirstUseDelay = 0;
+
 	private boolean use = false;
 	private int Udelay;
 
 	public void Sfinish(){
 		Sdelay = shootDelay;
 		shoot = false;
+		//打ち終わった後しばらくの時間 DisableFirstShoot の処理を受け付ける
+		if(DisableFirstUse){
+			DisableFirstUseDelay = shootDelay+useDelay;
+		}
 	}
 
 	public void Ufinish(){
+		//
 		Udelay = useDelay;
 		use = false;
 	}
 	public void shoot(){
 		Player ikaPlayer = ika.getPlayer();
 		if(ika!=null&&ikaPlayer.isOnline()){
+			if(DisableFirstUse){
+				if(DisableFirstUseDelay>0){
+					return;
+				}
+			}
 			Location loc = ikaPlayer.getLocation();
 			if(checkInk(shootNeedInk)){
 				useInk(shootNeedInk);
 
+				onRecoil(shootRecoil);
+				onReaction(shootReaction);
 				for(String name:shootSound.keySet()){
 					Utils.playSound(name,shootSound.get(name), loc);
 				}
@@ -107,6 +128,10 @@ public class IkaWeapon {
 				ikaPlayer.playSound(loc, Sound.CLICK, 1.0F, 2.0F);
 				ikaPlayer.getPlayer().sendMessage(ChatColor.RED+"インクが足りません");
 				Sfinish();
+				if(DisableFirstUse){
+					DisableFirstUseDelay=0;
+					use=false;
+				}
 				Sdelay = 20;
 			}
 		}
@@ -115,11 +140,24 @@ public class IkaWeapon {
 	public void use(){
 		Player ikaPlayer = ika.getPlayer();
 		if(ika!=null&&ikaPlayer.isOnline()){
-			if(!ikaPlayer.isOnGround()){
-				return;
-			}
 			Location loc = ikaPlayer.getLocation();
 			if(checkInk(needInk)){
+				//バッシャンしてからじゃないと使えない場合
+				if(DisableFirstUse){
+					if(DisableFirstUseDelay<=0){
+						if(miningFatigue>0){
+							onShootDelay();
+						}else{
+							onShoot();
+						}
+						return;
+					}
+					//使ってる間はずっと使えるようにしておく
+					DisableFirstUseDelay = shootDelay+useDelay;
+				}
+				if(!ikaPlayer.isOnGround()){
+					return;
+				}
 				useInk(needInk);
 				for(String name:this.sound.keySet()){
 					Utils.playSound(name,sound.get(name), loc);
@@ -161,6 +199,39 @@ public class IkaWeapon {
 				Udelay = 20;
 			}
 		}
+	}
+
+	public boolean onReaction(final double reaction){
+		if(reaction != 0.0D){
+			Bukkit.getScheduler().runTaskLater(Splatoon.instance, new Runnable() {
+				@Override
+				public void run() {
+					Player player = ika.getPlayer();
+					Vector v = player.getVelocity();
+					Location pl = player.getLocation();
+					pl.setPitch((float) (pl.getPitch()-reaction));
+					player.teleport(pl);
+					player.setVelocity(v);
+					}
+			},1);
+		}
+		return true;
+	}
+
+	public boolean onRecoil(double recoil){
+		if(recoil != 0.0D){
+			Player player = ika.getPlayer();
+			Location ploc = player.getLocation();
+			double dir = -ploc.getYaw() - 90.0F;
+			double pitch = - ploc.getPitch() - 180.0F;
+			double xd = Math.cos(Math.toRadians(dir)) * Math.cos(Math.toRadians(pitch));
+			double yd = Math.sin(Math.toRadians(pitch));
+			double zd = -Math.sin(Math.toRadians(dir)) * Math.cos(Math.toRadians(pitch));
+			Vector vec = new Vector(xd, yd, zd);
+			vec.multiply(recoil / 2.0D).setY(0);
+			player.setVelocity(player.getVelocity().add(vec));
+		}
+		return true;
 	}
 
 	public void onUseDamage(LivingEntity entity){
@@ -222,8 +293,13 @@ public class IkaWeapon {
 	}
 	public void tick() {
 		if(ika!=null){
-			if(ika.isIka()){
+			if(ika.isIka()||ika.isSpectator()){
+				use=false;
+				shoot=false;
 				miningDelay=false;
+			}
+			if(DisableFirstUse){
+				DisableFirstUseDelay-=1;
 			}
 //			ika.getPlayer().sendMessage("active");
 			//Delayの更新とかshootとかここで管理
@@ -253,6 +329,7 @@ public class IkaWeapon {
 			if(use){
 				use();
 			}
+			onReName();
 		}
 	}
 
@@ -282,6 +359,10 @@ public class IkaWeapon {
 		clone.shootSound=this.shootSound;
 		clone.fullAuto=this.fullAuto;
 		clone.moveFinishMultiply=this.moveFinishMultiply;
+		clone.DisableFirstUse=this.DisableFirstUse;
+		clone.shootReaction=this.shootReaction;
+		clone.shootRecoil=this.shootRecoil;
+		clone.shootKnockback=this.shootKnockback;
 		return clone;
 	}
 
@@ -322,6 +403,51 @@ public class IkaWeapon {
 		id[1]=Integer.parseInt(args[1]);
 		weaponID=id;
 		return;
+	}
+
+	public boolean onReName(){
+		if(itemStack!=null){
+			//何もせずに返す
+			if(DisableFirstUseDelay>=0&&DisableFirstUse){
+				setName(itemStack, this.weaponName);
+				return true;
+			}
+			//予備動作時間
+			if(0<=Mdelay&&miningDelay){
+				setName(itemStack, this.weaponName+getDelay(Mdelay,miningFatigue,ScoreBoardUtil.ColorReplace(ScoreBoardUtil.getPlayerTeam(ScoreBoardUtil.getMainScoreboard(),ika.getPlayer()).getName())));
+				return true;
+			}
+			//次に撃てるまでの時間
+			if(checkInk(shootNeedInk)){
+				if(0<=Sdelay){
+					setName(itemStack, this.weaponName+getDelay(Sdelay,shootDelay,ScoreBoardUtil.ColorReplace(ScoreBoardUtil.getPlayerTeam(ScoreBoardUtil.getMainScoreboard(),ika.getPlayer()).getName())));
+					return true;
+				}
+			}else{
+				setName(itemStack, this.weaponName);
+			}
+		}
+		return false;
+	}
+
+	private String getDelay(int timer,int time,ChatColor chatColor){
+		double maxlength = 50;
+		double a = timer;
+		int b = (int) ((time-a)/time*maxlength);
+		if(b<0){
+			b=0;
+		}
+		int c = (int) (maxlength-b);
+		String a1 = chatColor+"";
+		String b1 = ChatColor.DARK_GRAY+"";
+		for(int i=0;i<b;i++){
+			a1+="│";
+		}
+		for(int i=0;i<c;i++){
+			b1+="│";
+		}
+		String c1 =ChatColor.RESET+"";
+		return  c1+" ["+a1+b1+c1+"]";
 	}
 
 	public void setSound(String set) {
@@ -380,4 +506,8 @@ public class IkaWeapon {
 	    is.setItemMeta(m);
 	    return is;
 	  }
+
+	public void setItemStack(ItemStack hand) {
+		this.itemStack = hand;
+	}
 }

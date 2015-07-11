@@ -11,6 +11,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -69,31 +70,102 @@ public class ScoreBoardUtil {
 	    	}
 			return block;
 	    }
-
 	}
+//	List<String> a = new ArrayList<String>();
+//	a.add(player.getScoreboard().getTeam(paramString)+""+ChatColor.BOLD+" Splatoon ");
+//	a.add("-------------"+ChatColor.DARK_GREEN);
+//	a.add(ChatColor.DARK_GREEN+"Time: "+ChatColor.WHITE+"00:00");
+//	a.add(" ");
+//	a.add(ChatColor.GOLD+"Points: "+ChatColor.WHITE+"0000");
+//	a.add(ChatColor.GREEN+"Special:"+ChatColor.WHITE+"000%");
+//	a.add(ChatColor.GREEN+"▮▮▮▮"+ChatColor.GRAY+"▮▮▮▮▮▮▮▮");
+//	a.add("-------------"+ChatColor.DARK_AQUA);
+//	ScoreBoardUtil.setSidebar(player,a, true);
+
+	public static void setSidebar(Player player,List<String> side,boolean display){
+		Scoreboard sb = player.getScoreboard();
+		Objective obj = sb.getObjective("ika");
+		if ( obj == null ) {// 取得できなかったら新規作成する
+			obj = sb.registerNewObjective("ika", "dummy");
+		}
+		if(display){
+//			obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+		    //含まれないものは削除
+		    for(String string:sb.getEntries()){
+		    	boolean flag = false;
+		    	for(String a:side){
+		    		if(a.equals(string)){
+		    			flag=true;
+				        break;
+		    		}
+		    	}
+		    	if(flag){
+		    		continue;
+		    	}
+		    	sb.resetScores(string);
+		    }
+		    if(side.size()<=0){
+		    	return;
+		    }
+		    if(!obj.getDisplayName().equals(side.get(0))){
+			    obj.setDisplayName(side.get(0));
+		    }
+		    int score = side.size()-1;
+		    int max = 15;
+		    for(int point=0;1<=score;){
+				if(max<=point){
+					break;
+				}
+				String word = side.get(score);
+				if(point==0){
+					obj.getScore(word).setScore(1);
+				}
+				if(obj.getScore(word).getScore()!=point){
+					obj.getScore(word).setScore(point);
+				}
+				point++;
+				score--;
+			}
+		}
+	}
+
+
 	public static Team addPlayerTeam(Player player, String color) {
-		Scoreboard scoreboard = getMainScoreboard();
+		Team team =  addPlayerTeam(getMainScoreboard(), player, color);
+		for(Player send:Splatoon.getOnlinePlayers()){
+			addPlayerTeam(send.getScoreboard(), player, color);
+		}
+		return team;
+	}
+
+	public static Team addPlayerTeam(Scoreboard scoreboard,Player player, String color) {
 		Team team = scoreboard.getTeam(color);
 		if(team == null){
 			team = scoreboard.registerNewTeam(color);
 			team.setDisplayName(ColorReplace(color) + color + ChatColor.RESET);
 			team.setPrefix(ColorReplace(color).toString());
 			team.setSuffix(ChatColor.RESET.toString());
-			team.setAllowFriendlyFire(false);
 		}
 		team.addPlayer(player);
+		team.setAllowFriendlyFire(false);
+		team.setCanSeeFriendlyInvisibles(true);
 		player.setDisplayName(ColorReplace(color) + player.getName() + ChatColor.RESET);
-//		RefreshTeamAllPlayer();
 		return team;
 	}
 
 	public static void leavePlayerTeam(Player player) {
-		Team team = getPlayerTeam(player);
+		leavePlayerTeam(getMainScoreboard(), player);
+		for(Player send:Splatoon.getOnlinePlayers()){
+			leavePlayerTeam(send.getScoreboard(), player);
+		}
+	}
+
+	public static void leavePlayerTeam(Scoreboard scoreboard,Player player) {
+		Team team = getPlayerTeam(scoreboard,player);
 		if (team != null){
 			team.removePlayer(player);
 		}
 		player.setDisplayName(player.getName());
-//		RefreshTeamAllPlayer();
 	}
 
 	public static ChatColor ColorReplace(String color) {
@@ -144,7 +216,8 @@ public class ScoreBoardUtil {
     }
     public static Location getSpawnLocation(Player player){
     	Location location = player.getWorld().getSpawnLocation();
-    	Team team = getPlayerTeam(player);
+//    	player.getBedSpawnLocation()
+    	Team team = getPlayerTeam(getMainScoreboard(),player);
     	if(team!=null){
     		if(Splatoon.MainTask.getGameStatus().equals("countdown")||Splatoon.MainTask.getGameStatus().equals("gametime")){
     			Location spawn = Splatoon.MainTask.gameStage.getSpawn(team.getName());
@@ -153,11 +226,17 @@ public class ScoreBoardUtil {
     			}
     		}
     	}
+//    	if(location==null){
+//    		for(World world:Bukkit.getServer().getWorlds()){
+//    			if(world.getSpawnLocation()!=null){
+//    				location = world.getSpawnLocation();
+//    			}
+//    		}
+//    	}
     	return location;
     }
 
-	public static Team getPlayerTeam(Player player) {
-		Scoreboard scoreboard = getMainScoreboard();
+	public static Team getPlayerTeam(Scoreboard scoreboard,Player player) {
 		Set<Team> teams = scoreboard.getTeams();
 		for (Team team : teams) {
 			if(team!=null){
