@@ -48,13 +48,36 @@ public class Task {
 				a.add("-------------"+ChatColor.DARK_GREEN);
 				a.add(ChatColor.DARK_GREEN+"Time: "+ChatColor.WHITE+replaceMinutes(gameStage.getTimer()));
 				a.add(" ");
-				a.add(ChatColor.GOLD+"Points: "+ChatColor.WHITE+"0000");
+				a.add(ChatColor.GOLD+"Points:"+ChatColor.WHITE+getPoints(player));
 				a.add(ChatColor.GREEN+"Special:"+ChatColor.WHITE+"000%");
 				a.add(ChatColor.GREEN+""+ChatColor.GRAY+"▮▮▮▮▮▮▮▮▮▮▮▮");
 				a.add("-------------"+ChatColor.DARK_AQUA);
 			}
 		}
 		ScoreBoardUtil.setSidebar(player,a, true);
+	}
+	//ポイント表記を返す。
+	public String getPoints(Player player){
+		int point = Splatoon.ikaManager.getIka(player).point;
+		if(point>=99999){
+			return "99999";
+		}
+		if(point>=10000){
+			return String.valueOf(point);
+		}
+		if(point>=1000){
+			return " "+String.valueOf(point);
+		}
+		if(point>=100){
+			return String.valueOf(" 0"+point);
+		}
+		if(point>=10){
+			return String.valueOf(" 00"+point);
+		}
+		if(point>=0){
+			return String.valueOf(" 000"+point);
+		}
+		return "";
 	}
 
 	public static String replaceMinutes(int secconds){

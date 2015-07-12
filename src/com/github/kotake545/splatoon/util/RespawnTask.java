@@ -27,8 +27,11 @@ public class RespawnTask extends BukkitRunnable {
 	    	if(player == null || !player.isOnline()){
 	    		this.cancel();
 	    	}
-			double pa = 100-((count-tick)/count) *100;
-        	//setMessage(player,"復活まであと "+tick/20+"秒");
+//			double pa = 100-((count-tick)/count) *100;
+//        	setMessage(player,"復活まであと "+tick/20+"秒");
+	    	if(tick%20==0){
+	    		player.sendMessage(Splatoon.format+"復活まで"+((int)tick/20)+"秒");
+	    	}
 //	        setHealth(player, (float) pa);
 			player.getInventory().clear();
 			player.updateInventory();

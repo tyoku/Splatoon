@@ -22,6 +22,12 @@ public class BlockUtil {
 	 * int X Y Z world でチェックするようにしてる過程でどんどん汚くなったのであとで整理
 	 */
 
+	/**
+	 * 設置できた時にtrueを返します。
+	 * @param loc
+	 * @param block
+	 * @return
+	 */
 	@SuppressWarnings("deprecation")
 	public boolean setBlock(Location loc,Integer[] block){
 		if(block!=null){

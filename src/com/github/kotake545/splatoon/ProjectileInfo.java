@@ -99,7 +99,10 @@ public class ProjectileInfo {
 		}
 
 		for (Location bloc : BlockUtil.getPaintSphere(from,radius)){
-			Splatoon.blockUtil.setBlock(bloc,a);
+			//ポイント追加
+			if(Splatoon.blockUtil.setBlock(bloc,a)){
+				shooter.point+=1;
+			}
 		}
 	}
 	public void onDestroy(){

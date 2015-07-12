@@ -14,6 +14,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -91,7 +92,7 @@ public class IkaStage {
 		teams.put(teamName,getLocation(spawn));
 	}
 
-	public Location getLocation(String deta){
+	public static Location getLocation(String deta){
 		String[] s = deta.split("/");
 		World world = Bukkit.getWorld(s[0]);
 		double x = Double.parseDouble(s[1]);
@@ -110,6 +111,7 @@ public class IkaStage {
 		Splatoon.MainTask.gameStage = null;
 		Splatoon.blockUtil.returnBeforeBlocks();
 		for(Player player:Splatoon.getOnlinePlayers()){
+			int point = Splatoon.ikaManager.getIka(player).point;
 			ScoreBoardUtil.leavePlayerTeam(player);
 			Utils.heal(player);
 			Splatoon.ikaManager.getIka(player).Reset();
@@ -117,6 +119,8 @@ public class IkaStage {
 				ScoreBoardUtil.SpawnTeleport(player);
 			}
 			player.sendMessage(Splatoon.format+"ゲームが終了しました。");
+			Splatoon.ikaManager.getIka(player).point = 0;
+			player.sendMessage(Splatoon.format+"貴方のポイント数は"+point+"でした。(テスト)");
 		}
 	}
 
@@ -126,6 +130,7 @@ public class IkaStage {
 	public void onGameTime(){
 		for(Player player:Splatoon.getOnlinePlayers()){
 			player.sendMessage(Splatoon.format+"ゲームが開始しました。");
+			player.playSound(player.getLocation(),Sound.ZOMBIE_INFECT, 1,2);
 		}
 		this.gameTimeActive = true;
 		this.timer = gameTime;
@@ -169,24 +174,15 @@ public class IkaStage {
 	}
 	public void saveGameTime(int secconds) {
 		this.gameTime=secconds;
-		try {
-			onEditYml("gametime",String.valueOf(secconds));
-		} catch (IOException e) {
-		}
+		onEditYml("gametime",String.valueOf(secconds));
 	}
 	public void saveCountDown(int secconds) {
 		this.countDown=secconds;
-		try {
-			onEditYml("countdown",String.valueOf(secconds));
-		} catch (IOException e) {
-		}
+		onEditYml("countdown",String.valueOf(secconds));
 	}
 	public void saveGameStart(int secconds) {
 		this.gameStart=secconds;
-		try {
-			onEditYml("gamestart",String.valueOf(secconds));
-		} catch (IOException e) {
-		}
+		onEditYml("gamestart",String.valueOf(secconds));
 	}
 	public void saveSpawn(String teamName, Location location) {
 		teams.put(teamName, location);
@@ -196,13 +192,25 @@ public class IkaStage {
 		String z = String.valueOf(location.getZ());
 		String yaw = String.valueOf(location.getYaw());
 		String pitch = String.valueOf(location.getPitch());
+		onEditYml("spawnpoint["+teamName+"]",world+"/"+x+"/"+y+"/"+z+"/"+yaw+"/"+pitch);
+	}
+	public void onEditYml(String load,String set){
 		try {
-			onEditYml("spawnpoint["+teamName+"]",world+"/"+x+"/"+y+"/"+z+"/"+yaw+"/"+pitch);
-		} catch (IOException e) {
+			onEditYml(getFile(),stageName,Splatoon.getPluginFolder() + "/stages",load,set);
+		}catch (IOException e) {
 		}
 	}
-	public void onEditYml(String load,String set) throws IOException{
-		File file = getFile();
+
+	/**
+	 * YML編集用。
+	 * @param file
+	 * @param fileName
+	 * @param path
+	 * @param load
+	 * @param set
+	 * @throws IOException
+	 */
+	public static void onEditYml(File file,String fileName,String path,String load,String set) throws IOException{
 		ArrayList<String> line = new ArrayList<String>();
 		FileInputStream fstream = new FileInputStream(file.getAbsolutePath());
 		DataInputStream in = new DataInputStream(fstream);
@@ -235,8 +243,7 @@ public class IkaStage {
 		}
 		file.delete();//削除
 		//新規作成
-		String path = Splatoon.getPluginFolder() + "/stages";
-		File newyml = new File(path + "/" + stageName+".yml");
+		File newyml = new File(path + "/" + fileName+".yml");
 		newyml.createNewFile();
 		FileWriter edit = new FileWriter(newyml, true);
 		String n = System.getProperty("line.separator");

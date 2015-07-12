@@ -214,7 +214,7 @@ public class ikaListener implements Listener{
 				if(pi!=null){
 					Integer[] bIntegers = pi.getTeamBlock();
 					if(bIntegers!=null){
-						onDeadInkBom(player.getLocation().clone(), bIntegers);
+						onDeadInkBom(player.getLocation().clone(), bIntegers,killer);
 					}
 				}
 			}
@@ -234,7 +234,7 @@ public class ikaListener implements Listener{
 		event.setKeepInventory(true);
 	}
 
-	public void onDeadInkBom(Location location,Integer[] b){
+	public void onDeadInkBom(Location location,Integer[] b,Player killer){
 		Location from = location.clone().add(0,-0.1,0);
 		if(from.getBlock().getTypeId() == 0){
 			for(double i = 0.2D; i < 4.0D; i += 0.2D){
@@ -247,7 +247,10 @@ public class ikaListener implements Listener{
 		ParticleAPI.sendAllPlayer(EnumParticle.BLOCK_CRACK.setItemIDandData(b[0], b[1]),location.clone().add(0,1,0),(float)(radius/2),0F,(float)(radius/2),0,(int)(radius*4));
 		ParticleAPI.sendAllPlayer(EnumParticle.BLOCK_DUST.setItemIDandData(b[0], b[1]),location.clone().add(0,2,0),(float)radius,0F,(float)radius,0,(int)(radius*4));
 		for (Location bloc : BlockUtil.getPaintSphere(from,radius)){
-			Splatoon.blockUtil.setBlock(bloc,b);
+			//killerにポイント追加。
+			if(Splatoon.blockUtil.setBlock(bloc,b)){
+				Splatoon.ikaManager.getIka(killer).point+=1;
+			}
 		}
 	}
 

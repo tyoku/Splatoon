@@ -1,11 +1,18 @@
 package com.github.kotake545.splatoon;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.github.kotake545.splatoon.util.Utils;
@@ -51,6 +58,8 @@ public class ikaConfig {
 
 	public boolean changeColorGlass = false;
 
+	public Location spawnLocation = null;
+
 	public ikaConfig(){
 		try {
 			Object obj = Bukkit.getServer().getClass().getDeclaredMethod("getServer", new Class[0]).invoke(Bukkit.getServer(), new Object[0]);
@@ -80,7 +89,11 @@ public class ikaConfig {
         heal = (float) config.getDouble("heal");
         defaultClass = config.getString("defaultClass");
         damageEffect = config.getBoolean("damageEffect");
+
         changeColorGlass = config.getBoolean("changeColorGlass");
+        changeSwimLength = config.getBoolean("changeSwimLength");
+
+        isSwimLength = (float) config.getDouble("isSwimLength");
         if(config.getString("inkType")!=null){
             if(config.getString("inkType").toUpperCase().equals("WOOL")){
             	inkWool = true;
@@ -103,7 +116,81 @@ public class ikaConfig {
         shootPaintSound = IkaWeapon.getSoundData(config.getString("shootPaintSounds"));
         usePaintSound = IkaWeapon.getSoundData(config.getString("usePaintSounds"));
         downSteps = config.getBoolean("downSteps");
+
+        //コンフィグを読み込むのと同じタイミングでロビーのスポーンポイントも読み込む。
+        //ない場合はnullをセットしておく。
+        File spawnYML = getSpawnYML();
+		if(spawnYML!=null){
+			spawnLocation = loadSpawn(spawnYML);
+		}else{
+			spawnLocation = null;
+		}
 	}
+
+	public void createSpawnYML(Location location) throws IOException {
+		String world=location.getWorld().getName();
+		String x = String.valueOf(location.getX());
+		String y = String.valueOf(location.getY());
+		String z = String.valueOf(location.getZ());
+		String yaw = String.valueOf(location.getYaw());
+		String pitch = String.valueOf(location.getPitch());
+		String loc = world+"/"+x+"/"+y+"/"+z+"/"+yaw+"/"+pitch;
+		File spawnYML = getSpawnYML();
+		String n = System.getProperty("line.separator");
+		String path = Splatoon.getPluginFolder();
+		if(spawnYML==null){
+			File newyml = new File(path + "/" + "spawn.yml");
+			newyml.createNewFile();
+			FileWriter edit = new FileWriter(newyml, true);
+			edit.write("spawnpoint="+loc);
+			edit.close();
+			return;
+		}
+		//編集
+		IkaStage.onEditYml(spawnYML,"spawn",path,"spawnpoint",loc);
+	}
+
+	public static File getSpawnYML(){
+		File spawnYML=null;
+		String path = Splatoon.getPluginFolder();
+		File dir = new File(path);
+		String[] list = dir.list();
+		if(list != null){
+			for(String filename: list){
+				if(filename.toLowerCase().equals("spawn.yml")){
+					spawnYML = new File(path + "/" + filename);
+				}
+			}
+		}
+		return spawnYML;
+	}
+	public Location loadSpawn(File file){
+		ArrayList<String> line = new ArrayList<String>();
+		try {
+			FileInputStream fstream = new FileInputStream(file.getAbsolutePath());
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			while((strLine = br.readLine()) != null){
+				line.add(strLine);
+			}
+			br.close();
+			in.close();
+			fstream.close();
+		} catch (Exception e) {
+		}
+		for(String string:line){
+			if(string.indexOf("=") <= 0){
+				continue;
+			}
+			String load = string.substring(0,string.indexOf("=")).toLowerCase();
+			if(load.equals("spawnpoint")){
+				return IkaStage.getLocation(string.substring(string.indexOf("=") + 1));
+			}
+		}
+		return null;
+	}
+
 
 	public List<Integer[]> getInkCanselBlocks(String string){
 		List<Integer[]> blocks = new ArrayList<Integer[]>();
@@ -138,5 +225,12 @@ public class ikaConfig {
 			}
 		}
 		return blocks;
+	}
+
+	public float getSwimLength() {
+		if(!Splatoon.ikaConfig.changeSwimLength){
+			return 1.8F;
+		}
+		return isSwimLength;
 	}
 }

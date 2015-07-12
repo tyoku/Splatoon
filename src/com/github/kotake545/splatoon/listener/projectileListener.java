@@ -1,6 +1,5 @@
 package com.github.kotake545.splatoon.listener;
 
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -45,10 +44,10 @@ public class projectileListener implements Listener{
 				event.setCancelled(true);
 				return;
 			}
-			if(!ika.getPlayer().isOp()&&ika.getPlayer().getGameMode()!=GameMode.CREATIVE){
-				event.setCancelled(true);
-				return;
-			}
+//			if(!ika.getPlayer().isOp()&&ika.getPlayer().getGameMode()!=GameMode.CREATIVE){
+//				event.setCancelled(true);
+//				return;
+//			}
 		}
 		if(event.getDamager() instanceof Projectile){
 			ProjectileInfo pi=Splatoon.projectileManager.getProjectileInfo((Projectile) event.getDamager());

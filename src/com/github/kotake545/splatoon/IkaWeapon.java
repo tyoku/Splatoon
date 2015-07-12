@@ -184,7 +184,10 @@ public class IkaWeapon {
 					}
 					ParticleAPI.sendAllPlayer(EnumParticle.BLOCK_DUST.setItemIDandData(a[0], a[1]),bloc,0.1F,0.1F,0.1F,0,3);
 					bloc.setY(loc.getY()-0.1);
-					Splatoon.blockUtil.setBlock(bloc,a);
+					//ポイント追加
+					if(Splatoon.blockUtil.setBlock(bloc,a)){
+						ika.point+=1;
+					}
 				}
 				for(LivingEntity entity:near.keySet()){
 					if(near.get(entity)){
@@ -407,6 +410,10 @@ public class IkaWeapon {
 
 	public boolean onReName(){
 		if(itemStack!=null){
+			if(0<=Sdelay){
+				setName(itemStack, this.weaponName+getDelay(Sdelay,shootDelay,ScoreBoardUtil.ColorReplace(ScoreBoardUtil.getPlayerTeam(ScoreBoardUtil.getMainScoreboard(),ika.getPlayer()).getName())));
+				return true;
+			}
 			//何もせずに返す
 			if(DisableFirstUseDelay>=0&&DisableFirstUse){
 				setName(itemStack, this.weaponName);

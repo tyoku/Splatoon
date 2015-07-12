@@ -216,6 +216,9 @@ public class ScoreBoardUtil {
     }
     public static Location getSpawnLocation(Player player){
     	Location location = player.getWorld().getSpawnLocation();
+    	if(Splatoon.ikaConfig.spawnLocation!=null){
+    		location = Splatoon.ikaConfig.spawnLocation;
+    	}
 //    	player.getBedSpawnLocation()
     	Team team = getPlayerTeam(getMainScoreboard(),player);
     	if(team!=null){

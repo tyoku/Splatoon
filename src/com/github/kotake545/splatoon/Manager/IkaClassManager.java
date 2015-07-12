@@ -1,119 +1,98 @@
 package com.github.kotake545.splatoon.Manager;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
 
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.ChatColor;
 
+import com.github.kotake545.splatoon.IkaClass;
 import com.github.kotake545.splatoon.Splatoon;
 
 public class IkaClassManager {
-	private static Hashtable<String,List<List<ItemStack>>> ikaClass;
+	private static List<IkaClass> ikaClass;
 
 	public IkaClassManager(){
-		ikaClass= new Hashtable<String, List<List<ItemStack>>>();
+		ikaClass= new ArrayList<IkaClass>();
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean loadIkaClass(){
 		String path = Splatoon.getPluginFolder() + "/class";
 		File dir = new File(path);
 		String[] list = dir.list();
 		if(list != null){
 			for(String filename: list){
-				String className = null;
-				YamlConfiguration yml = Splatoon.getYml(new File(path + "/" + filename));
-				Set<String> keys = yml.getConfigurationSection("").getKeys(false);
-				for(String name:keys){
-					className = name;
-					break;
-				}
-				if(className!=null&&yml.get(String.format("%s",className))!=null){
-					List<List<ItemStack>> inv = new ArrayList<List<ItemStack>>();
-					inv = (List<List<ItemStack>>) yml.get(className);
-					ikaClass.put(className, inv);
-				}
+				IkaClass ic = loadClassforYml(new File(path + "/" + filename));
+				ikaClass.add(ic);
 			}
 		}
 		return true;
 	}
-
-	@SuppressWarnings("deprecation")
-	public static void setInventry(Player player,List<List<ItemStack>> inv){
-		PlayerInventory inventory = player.getInventory();
-		inventory.clear();
-		inventory.setHelmet(null);
-		inventory.setChestplate(null);
-		inventory.setLeggings(null);
-		inventory.setBoots(null);
-		int pos = 0;
-		for(ItemStack a :inv.get(0)){
-			 player.getInventory().setItem(pos,a);
-			 pos++;
+	public IkaClass loadClassforYml(File file){
+		IkaClass ic = new IkaClass();
+		ArrayList<String> line = new ArrayList<String>();
+		try {
+			FileInputStream fstream = new FileInputStream(file.getAbsolutePath());
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			while((strLine = br.readLine()) != null){
+				line.add(strLine);
+			}
+			br.close();
+			in.close();
+			fstream.close();
+		} catch (Exception e) {
 		}
-		player.getInventory().setHelmet(inv.get(1).get(3));
-		player.getInventory().setChestplate(inv.get(1).get(2));
-		player.getInventory().setLeggings(inv.get(1).get(1));
-		player.getInventory().setBoots(inv.get(1).get(0));
-		player.updateInventory();
+		for(String string:line){
+			loadData(ic,string);
+		}
+		return ic;
 	}
 
-	public List<List<ItemStack>> getClass(String className){
-		if(ikaClass.containsKey(className.toLowerCase())){
-			return ikaClass.get(className.toLowerCase());
+	private void loadData(IkaClass ikaclass, String string) {
+		try {
+			if(string.indexOf("=") <= 0){
+				return;
+			}
+			String load = string.substring(0,string.indexOf("=")).toLowerCase();
+			String set = string.substring(string.indexOf("=") + 1);
+			if(load.equals("classname")){
+				ikaclass.className=set;
+			}
+			if(load.equals("mainweapon")){
+				ikaclass.mainWeapon=set;
+			}
+			if(load.equals("subweapon")){
+				ikaclass.subWeapon=set;
+			}
+			if(load.equals("specialweapon")){
+				ikaclass.specialWeapon=set;
+			}
+		} catch (Exception e) {
+
+		}
+	}
+
+	public List<IkaClass> getAllClass(){
+		ArrayList<IkaClass> clones = new ArrayList<IkaClass>();
+		for(int i = ikaClass.size() - 1; i >= 0; i--){
+			clones.add(ikaClass.get(i).clone());
+		}
+		return clones;
+	}
+
+	public IkaClass getClass(String itemDisplayName) {
+		for(int i = ikaClass.size() - 1; i >= 0; i--){
+			String name = ChatColor.stripColor(ikaClass.get(i).getName());
+			if(name.toLowerCase().equals(itemDisplayName.toLowerCase())){
+				return ikaClass.get(i);
+			}
 		}
 		return null;
-	}
-	public boolean addClass(String className,PlayerInventory inventory){
-		String name = className.toLowerCase();
-		if(ikaClass.containsKey(name)){
-			return false;
-		}else{
-			String path = Splatoon.getPluginFolder() + "/class";
-			File newfile = new File(path + "/" + name+".yml");
-			try {
-				newfile.createNewFile();
-			} catch (IOException e1) {
-				// TODO 自動生成された catch ブロック
-				e1.printStackTrace();
-			}
-			YamlConfiguration yml = Splatoon.getYml(newfile);
-			List<List<ItemStack>> inv = new ArrayList<List<ItemStack>>();
-			List<ItemStack> contents = new ArrayList<ItemStack>();
-			ItemStack[] i = inventory.getContents();
-			int pos = 0;
-			for (ItemStack stack : i) {
-				contents.add(pos, stack);
-				pos++;
-				}
-			inv.add(contents);
-			int pos2 = 0;
-			List<ItemStack> armorcontents = new ArrayList<ItemStack>();
-			ItemStack[] a = inventory.getArmorContents();
-			for (ItemStack stack : a) {
-				armorcontents.add(pos2, stack);
-				pos2++;
-				}
-			inv.add(armorcontents);
-			yml.set(String.format("%s",name),inv);
-			ikaClass.put(name, inv);
-			try {
-				yml.save(newfile);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return true;
-	}
-
-	public Set<String> getAllClass() {
-		return ikaClass.keySet();
 	}
 }

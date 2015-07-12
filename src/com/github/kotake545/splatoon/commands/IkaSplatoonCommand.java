@@ -1,6 +1,9 @@
 package com.github.kotake545.splatoon.commands;
 
+import java.io.IOException;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,6 +18,23 @@ public class IkaSplatoonCommand extends IkaCommandExecuter {
 	public boolean onCommand(CommandSender sender, Command command, String paramString, String[] args) {
 		if(args.length!=1&&args.length!=2&&args.length!=3){
 			return unknown(sender, paramString);
+		}
+		if(args[0].toLowerCase().equals("setspawn")){
+			if(sender instanceof Player){
+				//スポーンセット
+				Location location = ((Player)sender).getLocation();
+				Splatoon.ikaConfig.spawnLocation = location;
+				try {
+					Splatoon.ikaConfig.createSpawnYML(location);
+					sender.sendMessage(Splatoon.format+"現在位置をロビースポーンポイントの設定しました。");
+				} catch (IOException e) {
+					sender.sendMessage(Splatoon.format+"なにかがおかしいよ。");
+					e.printStackTrace();
+				}
+			}else{
+				sender.sendMessage(Splatoon.format+"プレイヤーのみ使用可能です。");
+			}
+			return true;
 		}
 		if(args[0].toLowerCase().equals("end")){
 			if(Splatoon.MainTask.gameEnd()){
@@ -31,9 +51,9 @@ public class IkaSplatoonCommand extends IkaCommandExecuter {
 		}
 		if(2<=args.length){
 			if(args[0].toLowerCase().equals("start")){
-				IkaStage stage = Splatoon.ikaStageManager.getStage(args[1]).clone();
+				IkaStage stage = Splatoon.ikaStageManager.getStage(args[1]);
 				if(stage!=null){
-					if(Splatoon.MainTask.gameStart(stage)){
+					if(Splatoon.MainTask.gameStart(stage.clone())){
 						sender.sendMessage(Splatoon.format+stage.getName()+"でゲームを開始します。");
 					}else{
 						sender.sendMessage(Splatoon.format+"既にゲームが始まっているため開始出来ませんでした。");
@@ -99,6 +119,7 @@ public class IkaSplatoonCommand extends IkaCommandExecuter {
 		return unknown(sender, paramString);
 	}
 	private Boolean unknown(CommandSender sender,String paramString){
+		sender.sendMessage(Splatoon.format+"/"+paramString+" setspawn");
 		sender.sendMessage(Splatoon.format+"/"+paramString+" start [stagename]");
 		sender.sendMessage(Splatoon.format+"/"+paramString+" end");
 		sender.sendMessage(Splatoon.format+"/"+paramString+" return");

@@ -20,7 +20,6 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import com.github.kotake545.splatoon.Manager.IkaClassManager;
 import com.github.kotake545.splatoon.Manager.IkaWeaponManager;
 import com.github.kotake545.splatoon.Packet.ParticleAPI;
 import com.github.kotake545.splatoon.Packet.ParticleAPI.EnumParticle;
@@ -62,7 +61,7 @@ public class IkaPlayerInfo {
 	private boolean isHave;
 	private boolean spectator;
 
-	public String SelectClassName;
+	public IkaClass SelectClass;
 
 //	private Squid squid = null;
 //	private boolean squidTeleport = false;
@@ -92,7 +91,7 @@ public class IkaPlayerInfo {
 		this.lastLocation = player.getLocation().clone();
 		player.setFoodLevel(2);
 		this.clickType = "none";
-		this.SelectClassName = Splatoon.ikaConfig.defaultClass;
+		this.SelectClass = Splatoon.ikaClassManager.getClass(Splatoon.ikaConfig.defaultClass);
 		this.weapons = Splatoon.ikaWeaponManager.getAllWeapons();
 		for(int i = 0; i < weapons.size(); i++){
 			weapons.get(i).ika = this;
@@ -103,7 +102,7 @@ public class IkaPlayerInfo {
 	 * 初期化
 	 */
 	public void Reset(){
-		this.point = 0;
+//		this.point = 0;
 		this.spectator = false;
 		this.canFly = false;
 		this.swim = false;
@@ -154,14 +153,18 @@ public class IkaPlayerInfo {
 			for ( PotionEffect e : effects ) {
 				player.removePotionEffect(e.getType());
 			}
+			swim=false;
+			setLength();
 			player.setWalkSpeed(Splatoon.ikaConfig.moveSpeed);
 			return;
 		}
 		if(Splatoon.MainTask.getGameStatus().equals("countdown")){
+			lastSwim=true;
 			return;
 		}
 		if(isSpectator()){
 			player.setWalkSpeed(Splatoon.ikaConfig.moveSpeed);
+			lastSwim=true;
 			weapon = null;
 			return;
 		}
@@ -255,6 +258,8 @@ public class IkaPlayerInfo {
 				}
 			}
 		}
+		//当たり判定の変更
+		setLength();
 //		if(squidTeleport){
 //			if(squid!=null){
 //				squid.teleport(player.getLocation());
@@ -389,20 +394,6 @@ public class IkaPlayerInfo {
 				isIka=false;
 			}
 			return;
-		}
-	}
-
-	public void setClass(String className){
-		isHave=true;
-		this.SelectClassName = className;
-		List<List<ItemStack>> inv = Splatoon.ikaClassManager.getClass(className);
-		if(inv!=null){
-			IkaClassManager.setInventry(player, inv);
-		}else{
-			inv = Splatoon.ikaClassManager.getClass(Splatoon.ikaConfig.defaultClass);
-			if(inv!=null){
-				IkaClassManager.setInventry(player,inv);
-			}
 		}
 	}
 
@@ -554,11 +545,6 @@ public class IkaPlayerInfo {
 	public void onJump() {
 		jumping = 20;
 	}
-
-	public void onClass() {
-		setClass(SelectClassName);
-	}
-
 	public void setSpectator(boolean b) {
 		if(b){
 			this.spectator = true;
@@ -586,6 +572,22 @@ public class IkaPlayerInfo {
 				player.setAllowFlight(false);
 				player.setFlying(false);
 			}
+		}
+	}
+
+	public void setLength(){
+		if(isSpectator()){
+			return;
+		}
+		if(Splatoon.ikaConfig.spectatorMode){
+			//1.8の対応はまだ。
+
+			return;
+		}
+		if(swim){
+			setHeight(player,0F,0.6F,Splatoon.ikaConfig.getSwimLength());
+		}else{
+			setHeight(player,0F,0.6F,1.8F);
 		}
 	}
 
@@ -636,16 +638,25 @@ public class IkaPlayerInfo {
 	 */
 	public void setHeight(Player p, float height, float width, float length){
 		try{
-			Method handle = p.getClass().getMethod("getHandle", new Class[0]);
+			Method handle = p.getClass().getMethod("getHandle");
 			Class<?> c = Class.forName(Splatoon.ikaConfig.Version + ".Entity");
 			Field heightfield = c.getDeclaredField("height");
 			Field widthfield = c.getDeclaredField("width");
 			Field lengthfield = c.getDeclaredField("length");
-			heightfield.setFloat(handle.invoke(p, new Object[0]), height);
-			widthfield.setFloat(handle.invoke(p, new Object[0]), width);
-			lengthfield.setFloat(handle.invoke(p, new Object[0]), length);
+			heightfield.setFloat(handle.invoke(p), height);
+			widthfield.setFloat(handle.invoke(p), width);
+			lengthfield.setFloat(handle.invoke(p), length);
 		}catch (Exception e){
 			e.printStackTrace();
 		}
+	}
+	public void onClass() {
+		SelectClass.setInventry(player);
+		isHave = true;
+	}
+
+	public void setClass(IkaClass class1) {
+		this.SelectClass = class1;
+		onClass();
 	}
 }
