@@ -119,4 +119,10 @@ public class Utils {
             }
         }.runTaskLater(Splatoon.instance, 1L);
 	}
+
+	public static void playSoundAllPlayer(Sound sound,int a,float pitch){
+		for(Player player:Splatoon.getOnlinePlayers()){
+			player.playSound(player.getLocation(),sound,a,pitch);
+		}
+	}
 }

@@ -28,22 +28,25 @@ public class ScoreBoardUtil {
 	}
 
 	public enum Colors {
-		AQUA("aqua",3,0),
-		BLACK("black",15,0),
-		BLUE("blue",11,0),
-		DARK_AQUA("dark_aqua",9,0),
-		DARK_BLUE("dark_blue",22,0),
-		DARK_GRAY("dark_gray",7,0),
-		DARK_GREEN("dark_green",13,0),
-		DARK_PURPLE("dark_purple",10,0),
-		DARK_RED("dark_red",152,0),
-		GOLD("gold",1,0),
-		GRAY("gray",8,0),
-		GREEN("green",5,0),
-		LIGHT_PURPLE("light_purple",2,0),
-		RED("red",14,6),
+		/**
+		 * 羊毛と粘土の色が違うかと思って分けたんだけど同じだった @w@
+		 */
 		WHITE("white",0,0),
-	    YELLOW("yellow",4,0);
+		GOLD("gold",1,1),
+		DARK_PURPLE("dark_purple",2,2),
+		AQUA("aqua",3,3),
+		YELLOW("yellow",4,4),
+		GREEN("green",5,5),
+		LIGHT_PURPLE("light_purple",6,6),
+		DARK_GRAY("dark_gray",7,7),
+		GRAY("gray",8,8),
+		DARK_AQUA("dark_aqua",9,9),
+		DARK_BLUE("dark_blue",10,10),
+		BLUE("blue",11,11),
+		DARK_RED("dark_red",12,12),
+		DARK_GREEN("dark_green",13,13),
+		RED("red",14,14),
+		BLACK("black",15,15);
 
 	    private String Name;
 	    private int wool;
@@ -60,10 +63,6 @@ public class ScoreBoardUtil {
 	    	if(Splatoon.ikaConfig.inkWool){
 	    		block[0] = 35;
 	    		block[1] = wool;
-	    		if(wool>=22){
-		    		block[0] = wool;
-		    		block[1] = 0;
-	    		}
 	    	}else{
 	    		block[0] = 159;
 	    		block[1] = clay;

@@ -60,7 +60,9 @@ public class BlockUtil {
 
 	public static List<Location> getPaintVerticalLine(final Location loc,final Vector vector,int add,float distance){
 		List<Location> locations = new ArrayList<Location>();
-		vector.setY(0);
+		if(vector!=null){
+			vector.setY(0);
+		}
 		Location location = loc.clone();
 		for(int i=0;i<add;i++){
 			if(vector!=null){
@@ -90,6 +92,12 @@ public class BlockUtil {
     	return locations;
 	}
 
+	/**
+	 * from から to 間を結ぶ直線を返す
+	 * @param from
+	 * @param to
+	 * @return
+	 */
 	public static List<Location> getLine(Location from,Location to){
 		List<Location> locations = new ArrayList<Location>();
 		Location location = from.clone();
@@ -97,13 +105,40 @@ public class BlockUtil {
 		to.subtract(from.getX(),from.getY(),from.getZ());
 		double d=1D/count;
 		double x=to.getX()*d;
+		double y=to.getY()*d;
 		double z=to.getZ()*d;
 		for(int i=0;i<=count;i++){
 			location.setX(from.getX()+x*i);
+			location.setY(from.getY()+y*i);
 			location.setZ(from.getZ()+z*i);
 			locations.add(location.clone());
 		}
 		return locations;
+	}
+
+	/**
+	 * from から to 間にあるブロックがあったときLocationを返す。
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public static Location getBetweenBlock(Location from,Location to){
+		Location location = from.clone();
+		int count=(int) to.distance(from) *2 ;
+		to.subtract(from.getX(),from.getY(),from.getZ());
+		double d=1D/count;
+		double x=to.getX()*d;
+		double y=to.getY()*d;
+		double z=to.getZ()*d;
+		for(int i=0;i<=count;i++){
+			location.setX(from.getX()+x*i);
+			location.setY(from.getY()+y*i);
+			location.setZ(from.getZ()+z*i);
+			if(location.getBlock()!=null&&location.getBlock().getTypeId()!=0){
+				return location.clone();
+			}
+		}
+		return null;
 	}
 
 	public static List<Location> getPaintSphere(Location loc,double radius){
@@ -281,24 +316,27 @@ public class BlockUtil {
 //	 * Test
 //	 * Vector vector に垂直な円を Location lastloc を中心に 半径 radius 生成するロジック考察テスト
 //	 */
-//	public static void Test(Location lastloc,Vector vector,float radius){
-//		Location location = lastloc.clone();
-//		location.add(vector);
-//
-//    	double check = 2;
-//    	for (double i = 0.0; i < check; i ++) {
-//            double angle = (double) 2 * Math.PI * i / check;
-//        	float radian = (float) (Math.PI / 180);
-//            Vector v = new Vector(Math.cos(angle) * radius, i, Math.sin(angle) * radius);
-//
-//            rotateAroundAxisX(v, (location.getPitch() + 90) * radian);
-//            rotateAroundAxisY(v, -location.getYaw() * radian);
-//
-//            location.add(v);
-//            ParticleAPI.sendAllPlayer(EnumParticle.VILLAGER_HAPPY,location, 0, 0, 0, 0, 1);
-//            location.subtract(v);
-//    	}
-//	}
+	public static List<Location> getCircle(Location lastloc,Vector vector,float radius){
+		List<Location> locations = new ArrayList<Location>();
+		Location location = lastloc.clone();
+		if(vector!=null){
+			location.add(vector);
+		}
+    	double check = 180;
+    	for (double i1 = 0.0; i1 < check; i1 ++) {
+            double angle = (double) 2 * Math.PI * i1 / check;
+        	float radian = (float) (Math.PI / 180);
+            Vector v = new Vector(Math.cos(angle) * radius,0, Math.sin(angle) * radius);
+
+            rotateAroundAxisX(v, (location.getPitch() + 90) * radian);
+            rotateAroundAxisY(v, -location.getYaw() * radian);
+
+            location.add(v);
+            locations.add(location.clone());
+            location.subtract(v);
+    	}
+    	return locations;
+	}
 	public static final Vector rotateAroundAxisX(Vector v, double angle) {
 		double y, z, cos, sin;
 		cos = Math.cos(angle);
