@@ -21,13 +21,7 @@ public class Task {
 	public void timer(){
 		ticks++;
 		if(gameStage!=null){
-			if(ticks%20==0){
-				gameStage.timer();
-
-//				for(Player player:Splatoon.getOnlinePlayers()){
-//					setScoreBoard(player);
-//				}
-			}
+			gameStage.tick();
 		}
 		for(Player player:Splatoon.getOnlinePlayers()){
 			setScoreBoard(player);
@@ -105,6 +99,7 @@ public class Task {
 			if(gameStage.gameStartActive)return "gamestart";
 			if(gameStage.countDownActive)return "countdown";
 			if(gameStage.gameTimeActive)return "gametime";
+			if(gameStage.result)return "result";
 		}
 		return "false";
 	}

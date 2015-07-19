@@ -53,6 +53,7 @@ public class ikaListener implements Listener{
 		Player player = event.getPlayer();
 		ScoreBoardUtil.leavePlayerTeam(player);
 		Splatoon.ikaManager.removeIka(player);
+		player.setWalkSpeed(0.2F);
 	}
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event){
@@ -86,6 +87,11 @@ public class ikaListener implements Listener{
 		}
 		if(action==Action.RIGHT_CLICK_AIR||action==Action.RIGHT_CLICK_BLOCK){
 			ika.onClick("right");
+		}
+		if(!player.isOp()&&event.getAction()==Action.RIGHT_CLICK_BLOCK){
+			if(290<=player.getItemInHand().getTypeId()&&player.getItemInHand().getTypeId()<=294){
+				event.setCancelled(true);
+			}
 		}
 	}
 

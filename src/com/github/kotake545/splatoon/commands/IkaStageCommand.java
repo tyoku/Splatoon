@@ -17,7 +17,6 @@ import com.github.kotake545.splatoon.util.ScoreBoardUtil;
 import com.github.kotake545.splatoon.util.Utils;
 
 public class IkaStageCommand extends IkaCommandExecuter {
-	@SuppressWarnings({ "deprecation" })
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String paramString, String[] args) {
 		if(args.length==1&&args[0].toLowerCase().equals("list")){

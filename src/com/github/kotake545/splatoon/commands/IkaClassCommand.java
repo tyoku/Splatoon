@@ -12,9 +12,10 @@ import com.github.kotake545.splatoon.IkaClass;
 import com.github.kotake545.splatoon.Splatoon;
 
 public class IkaClassCommand extends IkaCommandExecuter {
-	
+
 	private List<String> classList;
 	private StringBuffer rollClass() {
+		classList = new ArrayList<String>();
 		StringBuffer buffer = new StringBuffer();
 		for(int i = 0;i < this.classList.size();i++) {
 			buffer.append(this.classList.get(i));
@@ -26,7 +27,7 @@ public class IkaClassCommand extends IkaCommandExecuter {
 	}
 	private void showClassListMessage(CommandSender sender,StringBuffer ClassList) {
 		if(classList.isEmpty()){
-			sender.sendMessage(Splatoon.format+"繧ｯ繝ｩ繧ｹ縺檎匳骭ｲ縺輔ｌ縺ｦ縺�縺ｾ縺帙ｓ縲�");
+			sender.sendMessage(Splatoon.format+"クラスが存在しませんでした。");
 		}else{
 			sender.sendMessage(Splatoon.format+"Class:"+classList.size());
 			sender.sendMessage(ClassList.toString());
@@ -36,24 +37,24 @@ public class IkaClassCommand extends IkaCommandExecuter {
 		if(Splatoon.ikaClassManager.getClass(className)!=null){
 			if(id!=null&&id.isOnline()){
 				Splatoon.ikaManager.getIka(id).setClass(Splatoon.ikaClassManager.getClass(className));
-				sender.sendMessage(Splatoon.format+id.getName()+"縺ｫ"+className+"繧定｣�蛯吶＆縺帙∪縺励◆縲�");
+				sender.sendMessage(Splatoon.format+id.getName()+"にクラス名:"+className+"を装備させました。");
 			}else{
-				sender.sendMessage(Splatoon.format+id.getName()+"縺ｨ縺�縺�繝励Ξ繧､繝､繝ｼ縺悟ｭ伜惠縺励∪縺帙ｓ縺ｧ縺励◆縲�");
+				sender.sendMessage(Splatoon.format+id.getName()+"プレイヤーが存在しませんでした。");
 			}
 		}else{
-			sender.sendMessage(Splatoon.format+className+" 繧ｯ繝ｩ繧ｹ縺檎匳骭ｲ縺輔ｌ縺ｦ縺�縺ｾ縺帙ｓ縲�");
+			sender.sendMessage(Splatoon.format+className+"が存在しませんでした。");
 		}
 	}
 	private void setClass(CommandSender sender,String className) {
 		if(Splatoon.ikaClassManager.getClass(className)!=null){
 			Splatoon.ikaManager.getIka((Player) sender).setClass(Splatoon.ikaClassManager.getClass(className));
-			sender.sendMessage(Splatoon.format+className+" 繧ｯ繝ｩ繧ｹ繧定｣�蛯吶＠縺ｾ縺励◆縲�");
+			sender.sendMessage(Splatoon.format+className+"を装備しました");
 		}else{
-			sender.sendMessage(Splatoon.format+className+" 繧ｯ繝ｩ繧ｹ縺檎匳骭ｲ縺輔ｌ縺ｦ縺�縺ｾ縺帙ｓ縲�");
+			sender.sendMessage(Splatoon.format+className+"クラスが見つかりませんでした。");
 		}
 	}
 	private Boolean showClassList(final String args[]) {
-		if(args.length==1&&args[0].toLowerCase().equals("classList")){
+		if(args.length==1&&args[0].toLowerCase().equals("list")){
 			return true;
 		}
 		return false;
@@ -75,7 +76,7 @@ public class IkaClassCommand extends IkaCommandExecuter {
 		super();
 		this.classList = new ArrayList<String>();
 	}
-	
+
 	@SuppressWarnings({ "deprecation" })
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String paramString, String[] args) {
@@ -93,6 +94,7 @@ public class IkaClassCommand extends IkaCommandExecuter {
 		}
 		else if(setClass(args,sender)){
 			setClass(sender,args[0]);
+			return true;
 		}
 		return unknown(sender, paramString);
 	}

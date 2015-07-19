@@ -12,6 +12,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.github.kotake545.splatoon.Packet.ParticleAPI;
@@ -27,18 +29,32 @@ public class IkaWeapon {
 	public String weaponType;
 
 	public String rightClick = "use";
-	public String leftClick = "shoot";
+	public String leftClick = "shoot"; //ChargeShoot 追加
 	public boolean DisableFirstUse=false; //shootを使ってからでないとuseが使えなくなります。
+
+	public boolean charger = false;
+
+	// ClickEvent "chargeshoot" に適応
+	public boolean charge;
+	public int Ccheck;
 
 	public int miningFatigue;
 	public int Mdelay;
+	public int Cdelay;
 	public boolean miningDelay;
 	public int needInk;
-	public int distance; //塗る範囲 長さ
+	public float distance; //塗る範囲 長さ
 	public int useDelay; //使える間隔
 	public float addMoveSpeed;
 	public double damage;
 	public Hashtable<String,Integer[]> sound = new Hashtable<String, Integer[]>();
+
+	//ChargeShoot チャージショットの設定
+	public int chargeTick = 10; //MAXチャージtick 最大チャージ時間 ダメージと飛距離を変動させます。
+	public String ballistic="CLOUD"; //エフェクト
+	public boolean paintBallistic; //弾道に塗るか
+	public int paintBallisticHeight; //弾道に塗る高さ
+	public float paintBallisticDistance; //弾道に塗る幅
 
 	public double shootReaction;
 	public double shootRecoil;
@@ -78,7 +94,14 @@ public class IkaWeapon {
 		shoot = false;
 		//打ち終わった後しばらくの時間 DisableFirstShoot の処理を受け付ける
 		if(DisableFirstUse){
-			DisableFirstUseDelay = shootDelay+useDelay;
+			int delay = shootDelay+useDelay;
+			if(delay<=5){
+				delay=5;
+			}
+			DisableFirstUseDelay = delay;
+		}
+		if(charger){
+			Cdelay=chargeTick;
 		}
 	}
 
@@ -87,7 +110,32 @@ public class IkaWeapon {
 		Udelay = useDelay;
 		use = false;
 	}
+	/**
+	 * チャージショット
+	 */
+	public void chargeshoot(){
+		Player ikaPlayer = ika.getPlayer();
+		if(ika!=null&&ikaPlayer.isOnline()){
+			//Cdelay が 0 に近づくほど威力が上がる。
+			//本家が溜め無し=40%の火力っぽいのでマックス50
+			//計算式 1-40/chargeTick*0.01*Cdelay * ダメージとか飛距離とか = ダメージとか距離とか
+			double a = 1-100/chargeTick*0.01*Cdelay;
+			shoot(a,true);
+		}
+	}
+	/**
+	 * 普通に撃つ
+	 */
 	public void shoot(){
+		shoot(1,false);
+	}
+
+	/**
+	 * 撃つ。
+	 * @param percentage - 力の割合。基本 1 。チャージャ用。
+	 * @param afterbullet - 弾道にインクを塗るかどうか
+	 */
+	public void shoot(double percentage,boolean afterbullet){
 		Player ikaPlayer = ika.getPlayer();
 		if(ika!=null&&ikaPlayer.isOnline()){
 			if(DisableFirstUse){
@@ -120,7 +168,7 @@ public class IkaWeapon {
 					double zd = -Math.sin(Math.toRadians(dir)) * Math.cos(Math.toRadians(pitch)) + zwep;
 					Vector vec = new Vector(xd, yd, zd);
 					vec.multiply(shootSpeed);
-					ProjectileInfo pi = new ProjectileInfo(ika,this, vec);
+					ProjectileInfo pi = new ProjectileInfo(ika,this, vec,percentage);
 					Splatoon.projectileManager.addProjectileInfo(pi);
 				}
 				Sfinish();
@@ -153,7 +201,11 @@ public class IkaWeapon {
 						return;
 					}
 					//使ってる間はずっと使えるようにしておく
-					DisableFirstUseDelay = shootDelay+useDelay;
+					int delay = shootDelay+useDelay;
+					if(delay<=5){
+						delay=5;
+					}
+					DisableFirstUseDelay = delay;
 				}
 				if(!ikaPlayer.isOnGround()){
 					return;
@@ -260,6 +312,14 @@ public class IkaWeapon {
 			}else
 			if(rightClick.equals("use")){
 				onUse();
+			}else
+			if(rightClick.equals("scope")){
+				onScope();
+			}else
+			if(rightClick.equals("chargeshoot")){
+				onCharge();
+				//予約する、予約を継続する。
+				Ccheck = 5;
 			}
 		}else
 		if(type.equals("left")){
@@ -273,7 +333,26 @@ public class IkaWeapon {
 			}else
 			if(leftClick.equals("use")){
 				onUse();
+			}else
+			if(leftClick.equals("scope")){
+				onScope();
+			}else
+			if(leftClick.equals("chargeshoot")){
+				onCharge();
+				//予約する、予約を継続する。
+				Ccheck = 3;
 			}
+		}
+	}
+	public void onScope(){
+		if(canScope==0){
+			return;
+		}
+		//ついていた場合
+		if(ika.getPlayer().hasPotionEffect(PotionEffectType.SLOW)){
+			ika.getPlayer().removePotionEffect(PotionEffectType.SLOW);
+		}else{
+			ika.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW,9999,(canScope-1)));
 		}
 	}
 	public void onShoot(){
@@ -281,6 +360,17 @@ public class IkaWeapon {
 			shoot = true;
 		}
 	}
+	public void onCharge(){
+		if(Sdelay>0){
+			return;
+		}
+		if(charge){
+		}else{
+			Cdelay=chargeTick;
+			charge=true;
+		}
+	}
+
 	public void onShootDelay(){
 		if(miningDelay){
 			//予約済みの時
@@ -300,6 +390,7 @@ public class IkaWeapon {
 				use=false;
 				shoot=false;
 				miningDelay=false;
+				charge = false;
 			}
 			if(DisableFirstUse){
 				DisableFirstUseDelay-=1;
@@ -315,6 +406,34 @@ public class IkaWeapon {
 				shoot();
 				miningDelay=false;
 			}
+			//チャージで予約されていた時
+			if(charge){
+				if(Ccheck>0){//クリックが押されている
+					//チャージ
+					if(Cdelay>0){
+//						ika.getPlayer().playSound(ika.getPlayer().getLocation(),Sound.FUSE, 1, 2);
+						Cdelay -= 1;
+					}
+//					else if(Cdelay==0){
+//						//音を鳴らす
+////						ika.getPlayer().playSound(ika.getPlayer().getLocation(),Sound.NOTE_BASS_GUITAR, 1, 2);
+//						ika.getPlayer().playNote(ika.getPlayer().getLocation(),Instrument.PIANO,Note.flat(1,Tone.G));
+////						ika.getPlayer().playEffect(ika.getPlayer().getLocation(),Effect.BOW_FIRE,2);
+//						Cdelay -= 1;
+//					}else if(Cdelay==-1){
+//						ika.getPlayer().playNote(ika.getPlayer().getLocation(),Instrument.PIANO,Note.sharp(1,Tone.G));
+//						Cdelay -= 1;
+//					}
+				}else{
+					//クリックが離された時
+					charge=false;
+					//本家が溜め無し=30%の火力っぽいのでマックス30
+					//計算式 1-40/chargeTick*0.01*Cdelay * ダメージとか飛距離とか = ダメージとか距離とか
+					chargeshoot();
+				}
+				Ccheck-=1;
+			}
+
 			lastShoot += 1;
 			if(lastShoot > 6){
 				Scheck = 0;
@@ -366,6 +485,12 @@ public class IkaWeapon {
 		clone.shootReaction=this.shootReaction;
 		clone.shootRecoil=this.shootRecoil;
 		clone.shootKnockback=this.shootKnockback;
+		clone.chargeTick=this.chargeTick;
+		clone.charger=this.charger;
+		clone.ballistic=this.ballistic;
+		clone.paintBallistic=this.paintBallistic;
+		clone.paintBallisticDistance=this.paintBallisticDistance;
+		clone.paintBallisticHeight=this.paintBallisticHeight;
 		return clone;
 	}
 
@@ -410,6 +535,19 @@ public class IkaWeapon {
 
 	public boolean onReName(){
 		if(itemStack!=null){
+			//チャージ
+			if(charger){
+				if(0<=Cdelay&&charge){
+					if(Cdelay==0){
+
+					}
+					setName(itemStack, this.weaponName+getDelay(Cdelay,chargeTick,ScoreBoardUtil.ColorReplace(ScoreBoardUtil.getPlayerTeam(ScoreBoardUtil.getMainScoreboard(),ika.getPlayer()).getName())));
+					return true;
+				}else{
+					setName(itemStack, this.weaponName+getDelay(chargeTick,chargeTick,ScoreBoardUtil.ColorReplace(ScoreBoardUtil.getPlayerTeam(ScoreBoardUtil.getMainScoreboard(),ika.getPlayer()).getName())));
+				}
+				return true;
+			}
 			if(0<=Sdelay){
 				setName(itemStack, this.weaponName+getDelay(Sdelay,shootDelay,ScoreBoardUtil.ColorReplace(ScoreBoardUtil.getPlayerTeam(ScoreBoardUtil.getMainScoreboard(),ika.getPlayer()).getName())));
 				return true;
@@ -516,5 +654,20 @@ public class IkaWeapon {
 
 	public void setItemStack(ItemStack hand) {
 		this.itemStack = hand;
+
+	}
+
+	public void setRightClick(String rightClick){
+		this.rightClick = rightClick;
+		if(rightClick.equals("chargeshoot")){
+			charger=true;
+		}
+	}
+
+	public void setLeftClick(String leftClick) {
+		this.leftClick = leftClick;
+		if(leftClick.equals("chargeshoot")){
+			charger=true;
+		}
 	}
 }

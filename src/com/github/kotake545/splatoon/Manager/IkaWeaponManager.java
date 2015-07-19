@@ -71,10 +71,10 @@ public class IkaWeaponManager {
 				ikaWeapon.weaponType=set;
 			}
 			if(load.equals("rightclickevent")){
-				ikaWeapon.rightClick=set.toLowerCase();
+				ikaWeapon.setRightClick(set.toLowerCase());
 			}
 			if(load.equals("leftclickevent")){
-				ikaWeapon.leftClick=set.toLowerCase();
+				ikaWeapon.setLeftClick(set.toLowerCase());
 			}
 			if(load.equals("miningfatigue")){
 				ikaWeapon.miningFatigue=Integer.parseInt(set);
@@ -83,7 +83,7 @@ public class IkaWeaponManager {
 				ikaWeapon.needInk=Integer.parseInt(set);
 			}
 			if(load.equals("distance")){
-				ikaWeapon.distance=Integer.parseInt(set);
+				ikaWeapon.distance=Float.parseFloat(set);
 			}
 			if(load.equals("usedelay")){
 				ikaWeapon.useDelay=Integer.parseInt(set);
@@ -144,6 +144,21 @@ public class IkaWeaponManager {
 			}
 			if(load.equals("shootknockback")){
 				ikaWeapon.shootKnockback=Double.parseDouble(set);
+			}
+			if(load.equals("chargetick")){
+				ikaWeapon.chargeTick=Integer.parseInt(set);
+			}
+			if(load.equals("ballistic")){
+				ikaWeapon.ballistic=set.toUpperCase();
+			}
+			if(load.equals("paintballistic")){
+				ikaWeapon.paintBallistic=Boolean.parseBoolean(set);
+			}
+			if(load.equals("paintballisticheight")){
+				ikaWeapon.paintBallisticHeight=Integer.parseInt(set);
+			}
+			if(load.equals("paintballisticdistance")){
+				ikaWeapon.paintBallisticDistance=Float.parseFloat(set);
 			}
 		} catch (Exception e) {
 

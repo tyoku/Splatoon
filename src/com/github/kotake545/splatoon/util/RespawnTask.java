@@ -20,6 +20,10 @@ public class RespawnTask extends BukkitRunnable {
     public void run() {
     	if(0 <tick){
     		if(!Splatoon.MainTask.getGameStatus().equals("gametime")){
+    			if(Splatoon.MainTask.getGameStatus().equals("result")){
+    				this.cancel();
+    				return;
+    			}
     			Utils.Respawn(player);
     			this.cancel();
     		}

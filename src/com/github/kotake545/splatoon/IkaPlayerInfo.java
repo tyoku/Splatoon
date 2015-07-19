@@ -325,7 +325,8 @@ public class IkaPlayerInfo {
 			}
 			IkaWeapon iw = getWeapon(IkaWeaponManager.getItemDisplayName(hand));
 			weapon = iw;
-			if(iw == null||lasthandItem!=hand){
+			//持ち替えた時
+			if(iw == null||!IkaWeaponManager.getItemDisplayName(lasthandItem).equals(IkaWeaponManager.getItemDisplayName(hand))){
 				player.removePotionEffect(PotionEffectType.SLOW);
 				player.removePotionEffect(PotionEffectType.SLOW_DIGGING);
 			}
@@ -458,7 +459,7 @@ public class IkaPlayerInfo {
 		}
 	}
 	public boolean checkWall(double x,double z){
-		if(checkTeamBlock(Utils.getBlock(player.getLocation().clone().add(x,0.1,z)))){
+		if(checkTeamBlock(Utils.getBlock(player.getLocation().clone().add(x,0,z)))){
 			Location eye = player.getEyeLocation().clone().add(x,0,z);
 			if(checkTeamBlock(Utils.getBlock(eye))||eye.getBlock()!=null&&eye.getBlock().getTypeId()==0){
 				return true;
